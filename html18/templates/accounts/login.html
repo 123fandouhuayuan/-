@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}用户登录{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/accounts/login.css' %}">
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/accounts/login.js' %}"></script>
+{% endblock %}
+
+{% block content %}
+<div class="container login-container">
+    <div class="card login-card">
+        <div class="login-header">
+            <h4><i class="fas fa-sign-in-alt"></i> 用户登录</h4>
+            <p>请登录您的账户</p>
+        </div>
+        <div class="login-body">
+            <form method="post">
+                {% csrf_token %}
+                {% if messages %}
+                {% for message in messages %}
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="fas fa-exclamation-circle"></i> {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+                {% endfor %}
+                {% endif %}
+                {% if form.errors %}
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-circle"></i> 用户名或密码错误，请重试。
+                </div>
+                {% endif %}
+                <div class="mb-3">
+                    <label for="id_username" class="form-label">
+                        <i class="fas fa-user"></i> 用户名
+                    </label>
+                    <input type="text" class="form-control" id="id_username" name="username" 
+                           placeholder="请输入用户名" required autofocus
+                           value="{{ username|default:'' }}">
+                </div>
+                <div class="mb-3">
+                    <label for="id_password" class="form-label">
+                        <i class="fas fa-lock"></i> 密码
+                    </label>
+                    <input type="password" class="form-control" id="id_password" name="password" 
+                           placeholder="请输入密码" required
+                           value="{{ password|default:'' }}">
+                </div>
+                <div class="captcha-section">
+                    <label class="captcha-label">
+                        <i class="fas fa-shield-alt"></i> 图片验证码
+                    </label>
+                    <div class="captcha-input-group">
+                        <input type="text" class="form-control captcha-input" id="id_captcha_code" 
+                               name="captcha_code" maxlength="4" placeholder="请输入验证码" required>
+                        <div class="captcha-image-wrapper" id="captcha-wrapper" title="点击刷新验证码">
+                            <img src="{% url 'login_captcha' %}" alt="验证码" class="captcha-image" id="captcha-image">
+                            <span class="captcha-refresh">点击刷新</span>
+                        </div>
+                    </div>
+                    <div class="captcha-hint">
+                        <i class="fas fa-info-circle"></i> 看不清？点击图片刷新验证码
+                    </div>
+                </div>
+                <div class="mb-3 form-check">
+                    <input type="checkbox" class="form-check-input" id="remember_me" name="remember_me">
+                    <label class="form-check-label" for="remember_me">
+                        <i class="fas fa-check-circle"></i> 记住我（14天内免登录）
+                    </label>
+                </div>
+                <div class="text-end mb-3">
+                    <a href="{% url 'password_reset' %}" class="forgot-password">
+                        <i class="fas fa-question-circle"></i> 忘记密码？
+                    </a>
+                </div>
+                <button type="submit" class="btn btn-login w-100">
+                    <i class="fas fa-sign-in-alt"></i> 登录
+                </button>
+                <div class="login-divider">
+                    <span>还没有账户？</span>
+                </div>
+                <a href="{% url 'register' %}" class="btn btn-register w-100">
+                    <i class="fas fa-user-plus"></i> 注册新账户
+                </a>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

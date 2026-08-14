@@ -1,0 +1,217 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block page_title %}{% endblock %}
+
+{% block content %}
+<div class="evaluation-wizard">
+    <div class="container-fluid py-4">
+    <div class="card border-0 shadow-lg rounded-lg overflow-hidden">
+        <div class="card-header bg-gradient bg-primary text-white py-4">
+            <div class="container">
+                <h5 class="mb-0"><strong>质量评价向导</strong></h5>
+                <p class="text-white text-opacity-80 small">请按照以下步骤完成机床质量评价</p>
+            </div>
+        </div>
+        <div class="card-body bg-light py-5">
+            <div class="container">
+                <!-- 步骤导航 -->
+                <div class="mb-8">
+                    <h6 class="text-muted mb-4 font-weight-normal">评价流程</h6>
+                    <div class="d-flex justify-content-center align-items-center flex-wrap">
+                        {% for step in steps %}
+                        <div class="flex-shrink-0 mx-4 mb-4">
+                            <div class="card transition-all duration-300 hover:shadow-lg {% if forloop.counter == 1 %}border-primary border-3 bg-primary text-white{% else %}bg-white shadow{% endif %} rounded-xl w-56">
+                                <div class="card-body px-5 py-4">
+                                    <h6 class="card-title d-flex align-items-center justify-content-center font-weight-bold text-xl">
+                                        {% if forloop.counter == 1 %}
+                                        <i class="fas fa-check-circle me-3"></i>
+                                        {% endif %}
+                                        {{ step }}
+                                    </h6>
+                                </div>
+                            </div>
+                        </div>
+                        {% if not forloop.last %}
+                        <div class="flex-shrink-0 mb-4 bg-primary bg-opacity-10 rounded-full p-3">
+                            <i class="fas fa-arrow-right text-primary text-xl font-bold"></i>
+                        </div>
+                        {% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
+                
+                <!-- 当前步骤 -->
+                <div class="mb-6 bg-white rounded-xl shadow-sm p-5">
+                    <div class="d-flex align-items-center mb-4">
+                        <div class="bg-primary text-white rounded-full w-8 h-8 flex items-center justify-center mr-3">
+                            <i class="fas fa-machine"></i>
+                        </div>
+                        <h6 class="font-weight-bold">当前步骤: 选择机床</h6>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="wizard-machine-select" class="form-label text-muted">请选择要评价的机床</label>
+                        <select class="form-select rounded-lg border-primary shadow-sm focus:ring-2 focus:ring-primary" id="wizard-machine-select" name="machine_id">
+                            <option value="">请选择机床</option>
+                            {% for machine in machines %}
+                            <option value="{{ machine.id }}" data-machine-type="{{ machine.machine_type }}">{{ machine.name }} ({% if machine.report_number %}{{ machine.report_number }}{% else %}{{ machine.model }}{% endif %})</option>
+                            {% endfor %}
+                        </select>
+                        {% if not machines %}
+                        <div class="alert alert-warning mt-3 rounded-lg border-warning bg-warning bg-opacity-10">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-exclamation-triangle text-warning mr-2"></i>
+                                <p class="mb-0">暂无机床数据，请先<a href="{% url 'machine_list' %}" class="text-warning font-weight-semibold">添加机床信息</a></p>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <!-- 添加机床按钮 -->
+                        <div class="mt-4">
+                            <a href="{% url 'machine_list' %}" class="btn btn-outline-primary rounded-lg px-4 py-2 transition-all hover:bg-primary hover:text-white">
+                                <i class="fas fa-plus mr-2"></i>添加机床
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- 机床标准选择 -->
+                    <div class="mb-4" id="standard-select-container" style="display: none;">
+                        <label for="wizard-standard-select" class="form-label text-muted">请选择机床标准</label>
+                        <select class="form-select rounded-lg border-primary shadow-sm focus:ring-2 focus:ring-primary" id="wizard-standard-select" name="standard_id">
+                            <option value="">请选择标准</option>
+                            <option value="18400.2">18400.2</option>
+                            <option value="4373.1">4373.1</option>
+
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- 操作按钮 -->
+                <div class="row">
+                    <div class="col-md-6">
+                        <a href="{% url 'evaluation_dashboard' %}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>返回
+                        </a>
+                    </div>
+                    <div class="col-md-6 text-right">
+                        <button type="button" class="btn btn-primary rounded-lg px-4 py-2 shadow-sm transition-all hover:shadow-md" id="next-step-btn">
+                            下一步
+                            <i class="fas fa-arrow-right ml-2"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const nextStepBtn = document.getElementById('next-step-btn');
+    const machineSelect = document.getElementById('wizard-machine-select');
+    const standardSelectContainer = document.getElementById('standard-select-container');
+    const standardSelect = document.getElementById('wizard-standard-select');
+
+    // 当选择机床后，显示标准选择框并动态更新标准选项
+    machineSelect.addEventListener('change', function() {
+        if (this.value) {
+            standardSelectContainer.style.display = 'block';
+            
+            // 获取选中选项的机床类型
+            const selectedOption = this.options[this.selectedIndex];
+            const machineType = selectedOption.getAttribute('data-machine-type');
+            
+            // 机床类型与标准选项映射配置
+            const machineTypeToStandard = {
+                'machining_center': { value: '18400.2', text: '18400.2' },
+                'boring_milling_machine': { value: '4373.1', text: '4373.1' }
+            };
+            
+            // 清空标准下拉菜单并添加对应选项
+            standardSelect.innerHTML = '<option value="">请选择标准</option>';
+            
+            if (machineType && machineTypeToStandard[machineType]) {
+                const standard = machineTypeToStandard[machineType];
+                const option = document.createElement('option');
+                option.value = standard.value;
+                option.textContent = standard.text;
+                standardSelect.appendChild(option);
+            }
+        } else {
+            standardSelectContainer.style.display = 'none';
+            standardSelect.innerHTML = '<option value="">请选择标准</option>';
+        }
+    });
+
+    // 添加按钮悬停效果
+    nextStepBtn.addEventListener('mouseenter', function() {
+        this.classList.add('transform', 'translate-x-1');
+    });
+
+    nextStepBtn.addEventListener('mouseleave', function() {
+        this.classList.remove('transform', 'translate-x-1');
+    });
+
+    nextStepBtn.addEventListener('click', function() {
+        const selectedMachineId = machineSelect.value;
+        if (!selectedMachineId) {
+            // 显示更美观的提示
+            const alert = document.createElement('div');
+            alert.className = 'alert alert-danger rounded-lg mt-3 border-danger bg-danger bg-opacity-10';
+            alert.innerHTML = `
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-exclamation-circle text-danger mr-2"></i>
+                    <p class="mb-0">请选择机床后再继续</p>
+                </div>
+            `;
+            machineSelect.parentNode.appendChild(alert);
+
+            // 3秒后自动移除提示
+            setTimeout(() => {
+                alert.remove();
+            }, 3000);
+            return;
+        }
+
+        // 获取选中的机床选项
+        const selectedOption = machineSelect.options[machineSelect.selectedIndex];
+        const machineType = selectedOption.getAttribute('data-machine-type');
+
+        // 获取选中的标准
+        const selectedStandard = standardSelect.value || 'group1';
+
+        // 根据机床类型跳转到对应的评价界面
+        // 统一使用 run_user 入口，通过 machine_type 参数区分机床类型
+        if (machineType === 'machining_center') {
+            window.location.href = `/evaluation/run_user/?machine_id=${selectedMachineId}&machine_type=machining_center&standard=${selectedStandard}`;
+        } else if (machineType === 'boring_milling_machine') {
+            window.location.href = `/evaluation/run_user/?machine_id=${selectedMachineId}&machine_type=boring_milling_machine&standard=${selectedStandard}`;
+        } else {
+            // 其他机床类型显示提示信息
+            const alert = document.createElement('div');
+            alert.className = 'alert alert-danger rounded-lg mt-3 border-danger bg-danger bg-opacity-10';
+            alert.innerHTML = `
+                <div class="d-flex align-items-start">
+                    <i class="fas fa-exclamation-triangle text-danger mr-2 mt-1"></i>
+                    <div>
+                        <h5 class="mb-2">抱歉，当前机床类型暂不支持</h5>
+                        <p class="mb-1"><strong>当前机床类型：</strong>${selectedOption.textContent}</p>
+                        <p class="mb-0 text-muted">请选择加工中心或镗铣床类型的机床进行评价</p>
+                    </div>
+                </div>
+            `;
+            machineSelect.parentNode.appendChild(alert);
+
+            // 5秒后自动移除提示
+            setTimeout(() => {
+                alert.remove();
+            }, 5000);
+            return;
+        }
+    });
+});
+</script>
+{% endblock %}

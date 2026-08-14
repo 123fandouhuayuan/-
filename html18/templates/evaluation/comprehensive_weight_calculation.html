@@ -1,0 +1,124 @@
+{% extends 'base.html' %}
+
+{% block title %}精度分数计算{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="/static/css/evaluation/comprehensive-weight-calculation.css">
+<script>
+    // 检测是否在iframe中
+    var isInIframe = window.self !== window.top;
+    if (isInIframe) {
+        document.write('<style>nav.navbar,.navbar{display:none!important}h1.h3,nav.breadcrumb,.d-flex.justify-content-between.align-items-center.mb-4{display:none!important}body{padding-top:0!important}.content-wrapper{margin-top:0!important;padding-top:10px!important}.container-fluid{padding-top:10px!important}#machine-select-card,#process-card,.footer{display:none!important}</style>');
+    }
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0 text-gray-800">精度分数计算</h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'visualization_dashboard' %}">首页</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'evaluation_dashboard' %}">质量评价</a></li>
+                <li class="breadcrumb-item active" aria-current="page">精度分数计算</li>
+            </ol>
+        </nav>
+    </div>
+
+    <div class="card mb-4" id="machine-select-card">
+        <div class="card-header">
+            <h5 class="card-title"><strong>机床选择与组合系数设置</strong></h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="machine-select" class="form-label">选择机床</label>
+                    <select class="form-select form-select-lg" id="machine-select" style="height: 48px; font-size: 1.25rem;">
+                        <option value="">请选择机床</option>
+                        {% for machine in machines %}
+                        <option value="{{ machine.id }}" data-machine-type="{{ machine.machine_type }}">{{ machine.name }} ({% if machine.report_number %}{{ machine.report_number }}{% else %}{{ machine.model }}{% endif %})</option>
+                        {% endfor %}
+                    </select>
+                    <div class="invalid-feedback" id="machine-select-feedback">请选择机床</div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="alpha-input" class="form-label">组合系数 α</label>
+                    <input type="number" class="form-control form-control-lg" id="alpha-input" min="0" max="1" step="0.01" value="0.5" style="height: 48px; font-size: 1.25rem;">
+                    <div class="form-text">
+                        组合权重计算公式：W = α × W_AHP + (1−α) × W_Entropy
+                        <br>α 取值范围：0-1，默认值：0.5
+                    </div>
+                    <div class="invalid-feedback" id="alpha-input-feedback">请输入有效的组合系数（0-1之间）</div>
+                </div>
+            </div>
+            <div class="row mb-3">
+                <div class="col-md-12 d-flex justify-content-end">
+                    <button type="button" class="btn btn-warning" id="save-alpha-btn" style="padding: 8px 24px;">
+                        <i class="fas fa-save mr-2"></i>保存组合系数
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mb-4">
+        <button type="button" class="btn btn-primary btn-lg w-100 py-3" id="calculate-btn">
+            <i class="fas fa-calculator mr-2"></i>开始计算精度分数
+        </button>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="card-title"><strong>计算结果</strong></h5>
+        </div>
+        <div class="card-body">
+            <div id="result-container" class="mt-3">
+                <div class="alert alert-info text-center p-5">
+                    <i class="fas fa-info-circle fa-3x mb-3 text-primary"></i>
+                    <h4 class="mt-2 mb-3">准备开始计算</h4>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-12 mb-4">
+            <button type="button" class="btn btn-success btn-lg w-100 py-3" id="save-result-btn" style="display: none;">
+                <i class="fas fa-save mr-2"></i>保存计算结果
+            </button>
+        </div>
+    </div>
+
+    <div class="card mb-4" id="weight-summary-card" style="display: none;">
+        <div class="card-header">
+            <h5 class="card-title"><strong>权重与结果摘要</strong></h5>
+        </div>
+        <div class="card-body">
+            <div id="weight-summary-container" class="mt-3">
+            </div>
+        </div>
+    </div>
+
+    <div class="card mb-4" id="process-card">
+        <div class="card-header">
+            <h5 class="card-title"><strong>计算过程详情</strong></h5>
+        </div>
+        <div class="card-body">
+            <div id="process-container" class="mt-3">
+                <div class="alert alert-secondary text-center p-5">
+                    <i class="fas fa-hourglass-half fa-3x mb-3 text-secondary"></i>
+                    <h4 class="mt-2 mb-3">计算过程</h4>
+                    <p class="mb-0">计算完成后，将显示详细的计算过程</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+    <div id="user-role-data" style="display:none;" data-is-admin="{% if is_admin %}true{% else %}false{% endif %}"></div>
+    <script src="/static/js/evaluation/comprehensive-weight-calculation.js"></script>
+{% endblock %}

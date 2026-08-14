@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block page_title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h5>导出数据</h5>
+    </div>
+    <div class="card-body">
+        <form method="POST">
+            {% csrf_token %}
+            <div class="mb-4">
+                <label for="export-format" class="form-label">导出格式</label>
+                <select class="form-select" id="export-format" name="export_format">
+                    <option value="xlsx">Excel (.xlsx)</option>
+                    <option value="csv">CSV (.csv)</option>
+                    <option value="pdf">PDF (.pdf)</option>
+                </select>
+            </div>
+            
+            <div class="mb-4">
+                <label class="form-label">导出内容</label>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="export-all" name="export_all" checked>
+                    <label class="form-check-label" for="export-all">导出所有机床数据</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="export-evaluations" name="export_evaluations">
+                    <label class="form-check-label" for="export-evaluations">包含评价记录</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="export-reports" name="export_reports">
+                    <label class="form-check-label" for="export-reports">包含报告数据</label>
+                </div>
+            </div>
+            
+            <div class="mb-4">
+                <label for="export-filename" class="form-label">文件名</label>
+                <input type="text" class="form-control" id="export-filename" name="export_filename" value="machine_data_{{ today }}">
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <a href="{% url 'machine_list' %}" class="btn btn-secondary">返回</a>
+                </div>
+                <div class="col-md-6 text-right">
+                    <button type="submit" class="btn btn-primary">开始导出</button>
+                </div>
+            </div>
+        </form>
+        
+        <div class="mt-4">
+            <h6>导出说明</h6>
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item">Excel 格式适合后续编辑和分析</li>
+                <li class="list-group-item">CSV 格式适合数据交换和导入到其他系统</li>
+                <li class="list-group-item">PDF 格式适合打印和存档</li>
+                <li class="list-group-item">导出包含评价记录和报告数据会增加文件大小</li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

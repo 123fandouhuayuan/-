@@ -1,0 +1,1787 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/evaluation/run_evaluation_pro.css' %}">
+{% endblock %}
+
+{% block page_title %}{% endblock %}
+
+{% block content %}
+<div class="sidebar">
+            <div class="indicator-hierarchy">
+        <!-- 一级指标 -->
+        <div class="level-1">
+            <div class="indicator-item level-1-item" data-level="1">
+                <div class="indicator-header level-1-header">
+                    <span class="indicator-title">精度</span>
+                    <span class="expand-icon">+</span>
+                </div>
+                <div class="indicator-content level-1-content">
+                    <!-- 二级指标 -->
+                    <div class="level-2 horizontal">
+                        <div class="indicator-item level-2-item" data-level="2">
+                            <div class="indicator-header level-2-header">
+                                <span class="indicator-title">几何精度</span>
+                                <span class="expand-icon">+</span>
+                            </div>
+                            <div class="indicator-content level-2-content">
+                                <!-- 三级指标 -->
+                                <div class="level-3 horizontal">
+                                    <div class="indicator-item level-3-item" data-level="3">
+                                        <div class="indicator-header level-3-header">
+                                            <span class="indicator-title">进给轴精度</span>
+                                            <span class="circle-icon"></span>
+                                        </div>
+                                        <div class="indicator-content level-3-content">
+                                        </div>
+                                    </div>
+                                    <div class="indicator-item level-3-item" data-level="3">
+                                        <div class="indicator-header level-3-header">
+                                            <span class="indicator-title">工作台精度</span>
+                                            <span class="circle-icon"></span>
+                                        </div>
+                                        <div class="indicator-content level-3-content">
+                                        </div>
+                                    </div>
+                                    <div class="indicator-item level-3-item" data-level="3">
+                                        <div class="indicator-header level-3-header">
+                                            <span class="indicator-title">主轴精度</span>
+                                            <span class="circle-icon"></span>
+                                        </div>
+                                        <div class="indicator-content level-3-content">
+                                        </div>
+                                    </div>
+                                    <div class="indicator-item level-3-item" data-level="3">
+                                        <div class="indicator-header level-3-header">
+                                            <span class="indicator-title">刀库精度</span>
+                                            <span class="circle-icon"></span>
+                                        </div>
+                                        <div class="indicator-content level-3-content">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="indicator-item level-2-item" data-level="2">
+                            <div class="indicator-header level-2-header">
+                                <span class="indicator-title">位置精度</span>
+                                <span class="circle-icon"></span>
+                            </div>
+                            <div class="indicator-content level-2-content">
+                            </div>
+                        </div>
+                        <div class="indicator-item level-2-item" data-level="2">
+                            <div class="indicator-header level-2-header">
+                                <span class="indicator-title">加工精度</span>
+                                <span class="circle-icon"></span>
+                            </div>
+                            <div class="indicator-content level-2-content">
+                            </div>
+                        </div>
+                        <div class="indicator-item level-2-item" data-level="2">
+                            <div class="indicator-header level-2-header">
+                                <span class="indicator-title">运动精度</span>
+                                <span class="expand-icon">+</span>
+                            </div>
+                            <div class="indicator-content level-2-content">
+                                <div class="level-3 horizontal">
+                                    <div class="indicator-item level-3-item" data-level="3">
+                                        <div class="indicator-header level-3-header">
+                                            <span class="indicator-title">主轴运动精度</span>
+                                            <span class="circle-icon"></span>
+                                        </div>
+                                        <div class="indicator-content level-3-content">
+                                        </div>
+                                    </div>
+                                    <div class="indicator-item level-3-item" data-level="3">
+                                        <div class="indicator-header level-3-header">
+                                            <span class="indicator-title">多轴联动精度</span>
+                                            <span class="circle-icon"></span>
+                                        </div>
+                                        <div class="indicator-content level-3-content">
+                                        </div>
+                                    </div>
+                                    <div class="indicator-item level-3-item" data-level="3">
+                                        <div class="indicator-header level-3-header">
+                                            <span class="indicator-title">传动精度</span>
+                                            <span class="circle-icon"></span>
+                                        </div>
+                                        <div class="indicator-content level-3-content">
+                                        </div>
+                                    </div>
+                                    <div class="indicator-item level-3-item" data-level="3">
+                                        <div class="indicator-header level-3-header">
+                                            <span class="indicator-title">热误差</span>
+                                            <span class="circle-icon"></span>
+                                        </div>
+                                        <div class="indicator-content level-3-content">
+                                        </div>
+                                    </div>
+                                    <div class="indicator-item level-3-item" data-level="3">
+                                        <div class="indicator-header level-3-header">
+                                            <span class="indicator-title">磨损精度</span>
+                                            <span class="circle-icon"></span>
+                                        </div>
+                                        <div class="indicator-content level-3-content">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 一级指标2 -->
+        <div class="level-1">
+            <div class="indicator-item level-1-item" data-level="1">
+                <div class="indicator-header level-1-header">
+                    <span class="indicator-title">性能</span>
+                    <span class="expand-icon">+</span>
+                </div>
+                <div class="indicator-content level-1-content">
+                </div>
+            </div>
+        </div>
+
+        <!-- 一级指标3 -->
+        <div class="level-1">
+            <div class="indicator-item level-1-item" data-level="1">
+                <div class="indicator-header level-1-header">
+                    <span class="indicator-title">可靠性</span>
+                    <span class="expand-icon">+</span>
+                </div>
+                <div class="indicator-content level-1-content">
+                </div>
+            </div>
+        </div>
+
+        <!-- 一级指标4 -->
+        <div class="level-1">
+            <div class="indicator-item level-1-item" data-level="1">
+                <div class="indicator-header level-1-header">
+                    <span class="indicator-title">智能化</span>
+                    <span class="expand-icon">+</span>
+                </div>
+                <div class="indicator-content level-1-content">
+                </div>
+            </div>
+        </div>
+
+        <!-- 一级指标5 -->
+        <div class="level-1">
+            <div class="indicator-item level-1-item" data-level="1">
+                <div class="indicator-header level-1-header">
+                    <span class="indicator-title">绿色化</span>
+                    <span class="expand-icon">+</span>
+                </div>
+                <div class="indicator-content level-1-content">
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 导航栏底部按钮 -->
+    <div class="sidebar-bottom-buttons">
+        <button class="btn btn-primary btn-sm" id="overall-import-btn">整体导入</button>
+        <button class="btn btn-success btn-sm" id="output-save-btn" disabled style="background-color: #cccccc; border-color: #cccccc;">下一步</button>
+    </div>
+        </div>
+</div>
+
+<div class="content-area">
+    <div id="content-display">
+        <!-- 页面加载时初始化entropy功能 -->
+        <script>
+            var urlParams = new URLSearchParams(window.location.search);
+            var machineId = urlParams.get('machine_id');
+            window.selectedMachineId = machineId;
+        </script>
+        
+        {% if path %}
+            <div class="container-fluid">
+                <!-- CSRF令牌 -->
+                <input type="hidden" name="csrfmiddlewaretoken" value="{% csrf_token %}">
+                <script>
+                    document.addEventListener('DOMContentLoaded', function() {
+                        initEntropyFunctions();
+                    });
+                </script>
+                
+                <!-- 数据录入和操作区 -->
+                <div class="row">
+                    <div class="col-md-12">
+                        <!-- 数据录入区 -->
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center justify-content-between mb-3">
+                                    <h5 class="card-title font-weight-bold mb-0" style="font-weight: bold; font-size: 1.5rem;">数据录入</h5>
+                                    <div class="d-flex align-items-center">
+                                        <label for="sample-count" class="form-label mb-0 me-2">样本数量：</label>
+                                        <div class="input-group input-group-sm" style="width: 120px;">
+                                            <input type="number" class="form-control form-control-sm" id="sample-count" value="2" min="1" max="20">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="data-entry-container">
+                                    <div class="row mb-3">
+                                        <div class="col-md-12">
+                                            <div class="table-responsive">
+                                                <table class="table table-bordered table-sm">
+                                                    <thead class="table-light">
+                                                        <tr>
+                                                            <th>组别</th>
+                                                            <th>直线度</th>
+                                                            <th>平行度</th>
+                                                            <th>角度误差</th>
+                                                            <th>垂直度</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody id="data-table-body">
+                                                        <tr>
+                                                            <td>1</td>
+                                                            <td><input type="number" class="form-control form-control-sm" value="0" step="0.0001"></td>
+                                                            <td><input type="number" class="form-control form-control-sm" value="0" step="0.0001"></td>
+                                                            <td><input type="number" class="form-control form-control-sm" value="0" step="0.0001"></td>
+                                                            <td><input type="number" class="form-control form-control-sm" value="0" step="0.0001"></td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>2</td>
+                                                            <td><input type="number" class="form-control form-control-sm" value="0" step="0.0001"></td>
+                                                            <td><input type="number" class="form-control form-control-sm" value="0" step="0.0001"></td>
+                                                            <td><input type="number" class="form-control form-control-sm" value="0" step="0.0001"></td>
+                                                            <td><input type="number" class="form-control form-control-sm" value="0" step="0.0001"></td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>3</td>
+                                                            <td><input type="number" class="form-control form-control-sm" value="0" step="0.0001"></td>
+                                                            <td><input type="number" class="form-control form-control-sm" value="0" step="0.0001"></td>
+                                                            <td><input type="number" class="form-control form-control-sm" value="0" step="0.0001"></td>
+                                                            <td><input type="number" class="form-control form-control-sm" value="0" step="0.0001"></td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>4</td>
+                                                            <td><input type="number" class="form-control form-control-sm" value="0" step="0.0001"></td>
+                                                            <td><input type="number" class="form-control form-control-sm" value="0" step="0.0001"></td>
+                                                            <td><input type="number" class="form-control form-control-sm" value="0" step="0.0001"></td>
+                                                            <td><input type="number" class="form-control form-control-sm" value="0" step="0.0001"></td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>5</td>
+                                                            <td><input type="number" class="form-control form-control-sm" value="0" step="0.0001"></td>
+                                                            <td><input type="number" class="form-control form-control-sm" value="0" step="0.0001"></td>
+                                                            <td><input type="number" class="form-control form-control-sm" value="0" step="0.0001"></td>
+                                                            <td><input type="number" class="form-control form-control-sm" value="0" step="0.0001"></td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="mt-2 d-flex align-items-center justify-content-between">
+                                        <div class="d-flex align-items-center">
+                                            <label for="excel-file" class="form-label mb-0 me-2">Excel导入：</label>
+                                            <input type="file" class="form-control form-control-sm me-2" id="excel-file" accept=".xlsx,.xls" style="width: 200px;">
+                                            <button class="btn btn-sm btn-info" id="import-excel-btn">导入Excel数据</button>
+                                        </div>
+                                        <div class="d-flex align-items-center">
+                                            <button class="btn btn-sm btn-secondary me-3" id="load-example-btn">导入示例数据</button>
+                                            <button class="btn btn-sm btn-secondary" id="clear-data-btn">清空数据</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 计算结果模块 -->
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <div id="calculation-result">
+                                    <div class="d-flex mb-3">
+                                        <button class="btn btn-sm btn-primary me-2" id="start-calculation-btn">开始计算</button>
+                                        <button class="btn btn-sm btn-success me-2" id="save-result-btn">保存结果</button>
+                                        <button class="btn btn-sm btn-secondary" id="reset-btn">重置</button>
+                                    </div>
+                                    <div id="result-content">
+                                        <p class="text-muted">点击"开始计算"按钮查看结果</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+
+
+<!-- 引入jQuery库 -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const indicatorItems = document.querySelectorAll('.indicator-item');
+
+    indicatorItems.forEach(function(item) {
+        const header = item.querySelector('.indicator-header');
+        const content = item.querySelector('.indicator-content');
+
+        if (header && content) {
+            header.addEventListener('click', function(e) {
+                e.stopPropagation();
+
+                const level = item.dataset.level;
+                const parentLevel = parseInt(level) - 1;
+
+                if (parentLevel > 0) {
+                    const parentContent = item.closest(`.level-${parentLevel}-content`);
+                    if (parentContent) {
+                        const siblings = parentContent.querySelectorAll(`.level-${level}-item`);
+                        siblings.forEach(function(sibling) {
+                            if (sibling !== item) {
+                                sibling.classList.remove('expanded');
+                                // 收起同级其他标题的所有下级标题
+                                const childItems = sibling.querySelectorAll('.indicator-item');
+                                childItems.forEach(function(child) {
+                                    child.classList.remove('expanded');
+                                });
+                            }
+                        });
+                    }
+                } else {
+                    const siblings = document.querySelectorAll(`.level-${level}-item`);
+                    siblings.forEach(function(sibling) {
+                        if (sibling !== item) {
+                            sibling.classList.remove('expanded');
+                            // 收起同级其他标题的所有下级标题
+                            const childItems = sibling.querySelectorAll('.indicator-item');
+                            childItems.forEach(function(child) {
+                                child.classList.remove('expanded');
+                            });
+                        }
+                    });
+                }
+
+                // 切换当前标题的展开/收起状态
+                const isExpanded = item.classList.contains('expanded');
+                if (isExpanded) {
+                    // 收起当前标题的所有下级标题
+                    const childItems = item.querySelectorAll('.indicator-item');
+                    childItems.forEach(function(child) {
+                        child.classList.remove('expanded');
+                    });
+                }
+                item.classList.toggle('expanded');
+            });
+        }
+    });
+    
+    // 为所有三级标题的indicator-header添加点击事件
+    const level3Headers = document.querySelectorAll('.level-3-item .indicator-header');
+    
+    // 处理circle-icon的点击事件
+    const circleIcons = document.querySelectorAll('.circle-icon');
+    circleIcons.forEach(icon => {
+        icon.addEventListener('click', function(e) {
+            e.stopPropagation();
+            this.classList.toggle('checked');
+        });
+    });
+    
+    level3Headers.forEach(header => {
+        var level3Title = header.querySelector('.indicator-title').textContent.trim();
+        
+        header.addEventListener('click', function(e) {
+            if (e.target.classList.contains('circle-icon')) {
+                return;
+            }
+            
+            e.stopPropagation();
+            
+            var level3Title = this.querySelector('.indicator-title').textContent.trim();
+            var level2Item = this.closest('.level-2-item');
+            var level2Title = level2Item.querySelector('.indicator-title').textContent.trim();
+            var level1Item = level2Item.closest('.level-1-item');
+            var level1Title = level1Item.querySelector('.indicator-title').textContent.trim();
+            
+            var path;
+            if (level2Title === '加工精度') {
+                path = `${level1Title} > ${level2Title}`;
+                window.currentLevel3Title = level3Title;
+            } else {
+                path = `${level1Title} > ${level2Title} > ${level3Title}`;
+                window.currentLevel3Title = level3Title;
+            }
+            
+            document.querySelectorAll('.level-3-item').forEach(item => {
+                item.classList.remove('active');
+                var title = item.querySelector('.indicator-title');
+                title.style.fontWeight = 'normal';
+                title.style.color = '';
+            });
+            
+            var currentLevel3Item = this.closest('.level-3-item');
+            currentLevel3Item.classList.add('active');
+            var currentTitle = this.querySelector('.indicator-title');
+            currentTitle.style.fontWeight = 'bold';
+            currentTitle.style.color = '#667eea';
+            
+            var parent = currentLevel3Item.parentElement;
+            while (parent && parent.classList.contains('indicator-content')) {
+                var parentItem = parent.parentElement;
+                if (parentItem && !parentItem.classList.contains('expanded')) {
+                    parentItem.classList.add('expanded');
+                }
+                parent = parent.parentElement;
+            }
+            
+            var contentDisplay = document.getElementById('content-display');
+            var csrfToken = document.querySelector('input[name="csrfmiddlewaretoken"]').value;
+            
+            var indicators = getIndicatorsByPath(path, level2Title, level3Title);
+            var scoreTableHtml = generateScoreTableHtml(indicators);
+            var matrixTableHtml = generateMatrixTableHtml(indicators);
+            
+            contentDisplay.innerHTML = `
+                <div class="container-fluid">
+                    <!-- CSRF令牌 -->
+                    <input type="hidden" name="csrfmiddlewaretoken" value="${csrfToken}">
+                    <!-- 当前路径导航 -->
+                    <div class="mb-4">
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title">当前路径</h5>
+                                <p class="card-text" id="current-path">${path}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 机床选择 -->
+                    <div class="mb-4">
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title">选择机床</h5>
+                                <div class="input-group">
+                                    <span class="input-group-text">机床名称</span>
+                                    <select class="form-select" id="machine-select">
+                                        <option value="">请选择机床</option>
+                                        {% for machine in machines %}
+                                            <option value="{{ machine.id }}">{{ machine.name }} ({% if machine.report_number %}{{ machine.report_number }}{% else %}{{ machine.model }}{% endif %})</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 打分指南 -->
+                    <div class="mb-4">
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title">打分指南</h5>
+                                <p class="card-text">
+                                    1:同等重要 | 3:稍微重要 | 5:明显重要 | 7:强烈重要 | 9:极端重要 | 2,4,6,8:中间值
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 快速导入Excel -->
+                    <div class="mb-4">
+                        <div class="card border-primary">
+                            <div class="card-body">
+                                <h5 class="card-title text-primary">
+                                    <i class="fas fa-file-excel"></i> 快速导入Excel数据
+                                </h5>
+                                <p class="card-text text-muted small">
+                                    支持上传Excel文件（.xlsx, .xls）自动填充指标打分表
+                                </p>
+                                <div class="row align-items-center">
+                                    <div class="col-md-8">
+                                        <div class="input-group">
+                                            <input type="file" class="form-control" id="excel-file" accept=".xlsx,.xls">
+                                            <label class="input-group-text bg-light">
+                                                <i class="fas fa-upload"></i> 选择文件
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <button class="btn btn-primary w-100" id="upload-excel-btn">
+                                            <i class="fas fa-cloud-upload-alt"></i> 上传并填充
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 指标重要程度打分表 -->
+                    <div class="mb-4">
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title">指标重要程度打分表 <small class="text-muted">(例：指标A对于指标B稍微重要，则对比项"指标A对指标B"打3分)</small></h5>
+                                <div class="matrix-container">
+                                    <table class="table table-bordered table-sm">
+                                        <thead>
+                                            <tr>
+                                                <th>对比项</th>
+                                                <th>打分</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="score-table-body">
+                                            ${scoreTableHtml}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 指标对比矩阵 -->
+                    <div class="mb-4">
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title">指标对比矩阵（只读）</h5>
+                                <div class="matrix-container">
+                                    <table class="table table-bordered table-sm matrix-table">
+                                        <thead>
+                                            <tr>
+                                                <th>指标名称</th>
+                                                ${indicators.map(ind => `<th>${ind}</th>`).join('')}
+                                                <th>说明</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            ${matrixTableHtml}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 矩阵一致性检验结果 -->
+                    <div class="mb-4">
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title">矩阵一致性检验结果：</h5>
+                                <div id="consistency-result">
+                                    <p class="card-text">
+                                        λmax = [计算中...] | CI = [计算中...] | RI = [计算中...] | CR = [计算中...]
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 操作按钮 -->
+                    <div class="mb-4">
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title">操作按钮：</h5>
+                                <div class="d-flex flex-wrap gap-3">
+                                    <button class="btn btn-sm btn-primary" id="save-matrix-btn">计算</button>
+                                    <button class="btn btn-sm btn-secondary" id="clear-matrix-btn">清除重填</button>
+                                    <button class="btn btn-sm btn-success" id="submit-matrix-btn">提交打分</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            initScoreTableEvents();
+            initMatrixCalculation();
+        });
+    });
+    
+    var level2Headers = document.querySelectorAll('.level-2-item .indicator-header');
+    level2Headers.forEach(header => {
+        var level2Title = header.querySelector('.indicator-title').textContent.trim();
+        
+        if (level2Title === '位置精度' || level2Title === '加工精度') {
+            header.addEventListener('click', function(e) {
+                if (e.target.classList.contains('circle-icon')) {
+                    return;
+                }
+                
+                e.stopPropagation();
+                
+                var level2Title = this.querySelector('.indicator-title').textContent.trim();
+                var level1Item = this.closest('.level-1-item');
+                var level1Title = level1Item.querySelector('.indicator-title').textContent.trim();
+                
+                var path = `${level1Title} > ${level2Title}`;
+                
+                window.currentLevel3Title = level2Title;
+                
+                document.querySelectorAll('.level-3-item').forEach(item => {
+                    item.classList.remove('active');
+                    var title = item.querySelector('.indicator-title');
+                    title.style.fontWeight = 'normal';
+                    title.style.color = '';
+                });
+                
+                var parent = this.closest('.level-2-item').parentElement;
+                while (parent && parent.classList.contains('indicator-content')) {
+                    var parentItem = parent.parentElement;
+                    if (parentItem && !parentItem.classList.contains('expanded')) {
+                        parentItem.classList.add('expanded');
+                    }
+                    parent = parent.parentElement;
+                }
+                
+                var contentDisplay = document.getElementById('content-display');
+                var csrfToken = document.querySelector('input[name="csrfmiddlewaretoken"]').value;
+                
+                var indicators = getIndicatorsByPath(path, level2Title, '');
+                var scoreTableHtml = generateScoreTableHtml(indicators);
+                var matrixTableHtml = generateMatrixTableHtml(indicators);
+                
+                contentDisplay.innerHTML = `
+                    <div class="container-fluid">
+                        <!-- CSRF令牌 -->
+                        <input type="hidden" name="csrfmiddlewaretoken" value="${csrfToken}">
+                        <!-- 当前路径导航 -->
+                        <div class="mb-4">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h5 class="card-title">当前路径</h5>
+                                    <p class="card-text" id="current-path">${path}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 机床选择 -->
+                        <div class="mb-4">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h5 class="card-title">选择机床</h5>
+                                    <div class="input-group">
+                                        <span class="input-group-text">机床名称</span>
+                                        <select class="form-select" id="machine-select">
+                                            <option value="">请选择机床</option>
+                                            {% for machine in machines %}
+                                                <option value="{{ machine.id }}">{{ machine.name }} ({% if machine.report_number %}{{ machine.report_number }}{% else %}{{ machine.model }}{% endif %})</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 打分指南 -->
+                        <div class="mb-4">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h5 class="card-title">打分指南</h5>
+                                    <p class="card-text">
+                                        1:同等重要 | 3:稍微重要 | 5:明显重要 | 7:强烈重要 | 9:极端重要 | 2,4,6,8:中间值
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 快速导入Excel -->
+                        <div class="mb-4">
+                            <div class="card border-primary">
+                                <div class="card-body">
+                                    <h5 class="card-title text-primary">
+                                        <i class="fas fa-file-excel"></i> 快速导入Excel数据
+                                    </h5>
+                                    <p class="card-text text-muted small">
+                                        支持上传Excel文件（.xlsx, .xls）自动填充指标打分表
+                                    </p>
+                                    <div class="row align-items-center">
+                                        <div class="col-md-8">
+                                            <div class="input-group">
+                                                <input type="file" class="form-control" id="excel-file" accept=".xlsx,.xls">
+                                                <label class="input-group-text bg-light">
+                                                    <i class="fas fa-upload"></i> 选择文件
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <button class="btn btn-primary w-100" id="upload-excel-btn">
+                                                <i class="fas fa-cloud-upload-alt"></i> 上传并填充
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 指标重要程度打分表 -->
+                        <div class="mb-4">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h5 class="card-title">指标重要程度打分表 <small class="text-muted">(例：指标A对于指标B稍微重要，则对比项"指标A对指标B"打3分)</small></h5>
+                                    
+                                    ${level2Title === '加工精度' ? `
+                                    <!-- 表面粗糙度和加工工序能力输入 -->
+                                    <div class="row mb-3">
+                                        <div class="col-md-6 mb-3">
+                                            <div class="input-group">
+                                                <span class="input-group-text">表面粗糙度</span>
+                                                <input type="number" class="form-control" id="surface-roughness" placeholder="输入表面粗糙度值" step="0.01" min="0" value="1" readonly>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <div class="input-group">
+                                                <span class="input-group-text">加工工序能力</span>
+                                                <input type="number" class="form-control" id="process-capability" placeholder="输入加工工序能力值" step="0.01" min="0" value="1" readonly>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    ` : ''}
+                                    
+                                    <div class="matrix-container">
+                                        <table class="table table-bordered table-sm">
+                                            <thead>
+                                                <tr>
+                                                    <th>对比项</th>
+                                                    <th>打分</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="score-table-body">
+                                                ${scoreTableHtml}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 指标对比矩阵 -->
+                        <div class="mb-4">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h5 class="card-title">指标对比矩阵（只读）</h5>
+                                    <div class="matrix-container">
+                                        <table class="table table-bordered table-sm matrix-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>指标名称</th>
+                                                    ${indicators.map(ind => `<th>${ind}</th>`).join('')}
+                                                    <th>说明</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                ${matrixTableHtml}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 矩阵一致性检验结果 -->
+                        <div class="mb-4">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h5 class="card-title">矩阵一致性检验结果：</h5>
+                                    <div id="consistency-result">
+                                        <p class="card-text">
+                                            λmax = [计算中...] | CI = [计算中...] | RI = [计算中...] | CR = [计算中...]
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 操作按钮 -->
+                        <div class="mb-4">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h5 class="card-title">操作按钮：</h5>
+                                    <div class="d-flex flex-wrap gap-3">
+                                        <button class="btn btn-sm btn-primary" id="save-matrix-btn">计算</button>
+                                        <button class="btn btn-sm btn-secondary" id="clear-matrix-btn">清除重填</button>
+                                        <button class="btn btn-sm btn-success" id="submit-matrix-btn">提交打分</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                initScoreTableEvents();
+                initMatrixCalculation();
+            });
+        }
+    });
+    
+    function getIndicatorsByPath(path, level2Title, level3Title) {
+        if (level3Title === '进给轴精度') {
+            return ['直线度', '平行度', '垂直度', '角度误差'];
+        } else if (level3Title === '工作台精度') {
+            return ['平面度', '直线度', 'T型槽平行度'];
+        } else if (level3Title === '主轴精度') {
+            return ['圆度', '同轴度', '主轴径向跳动', '主轴端面跳动', '主轴轴向窜动'];
+        } else if (level3Title === '刀库精度') {
+            return ['刀库定位精度', '刀库重复定位精度'];
+        } else if (level2Title === '位置精度') {
+            return ['重复定位精度', '定位精度', '平均位置偏移', '定位系统偏差', '最小分辨率', '反向间隙（差值）'];
+        } else if (level2Title === '加工精度') {
+            return ['尺寸精度', '形状精度'];
+        } else if (level3Title === '主轴运动精度') {
+            return ['主轴径向误差', '主轴轴向误差', '主轴角度误差', '主轴启停响应时间', '主轴高速旋转时的动平衡精度'];
+        } else if (level3Title === '多轴联动精度') {
+            return ['平面圆度误差', '多轴联动同步误差', '轮廓精度', '空间精度', '动态RTCP精度'];
+        } else if (level3Title === '传动精度') {
+            return ['直线、圆弧插补轨迹误差', '伺服跟随误差', '高速移动时"过冲"或"滞后"', '低速移动时"爬行"'];
+        } else if (level3Title === '热误差') {
+            return ['进给轴热误差', '主轴径向误差', '主轴轴向误差'];
+        } else if (level3Title === '磨损精度') {
+            return ['刀具磨损', '砂轮磨损（磨床）'];
+        } else {
+            return ['指标1', '指标2', '指标3', '指标4'];
+        }
+    }
+    
+    function generateScoreTableHtml(indicators) {
+        let html = '';
+        for (let i = 0; i < indicators.length; i++) {
+            for (let j = i + 1; j < indicators.length; j++) {
+                html += `
+                    <tr>
+                        <td>${indicators[i]}对${indicators[j]}</td>
+                        <td>
+                            <div class="input-group input-group-sm">
+                                <input type="text" class="form-control form-control-sm matrix-input" value="1" placeholder="输入1-9或1/2-1/9">
+                                <button class="btn btn-outline-secondary dropdown-toggle matrix-dropdown-btn" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                    <i class="fas fa-chevron-down" style="font-size: 0.75rem;"></i>
+                                </button>
+                                <ul class="dropdown-menu matrix-dropdown-menu">
+                                    <li><a class="dropdown-item" href="#" data-value="1/9">1/9</a></li>
+                                    <li><a class="dropdown-item" href="#" data-value="1/8">1/8</a></li>
+                                    <li><a class="dropdown-item" href="#" data-value="1/7">1/7</a></li>
+                                    <li><a class="dropdown-item" href="#" data-value="1/6">1/6</a></li>
+                                    <li><a class="dropdown-item" href="#" data-value="1/5">1/5</a></li>
+                                    <li><a class="dropdown-item" href="#" data-value="1/4">1/4</a></li>
+                                    <li><a class="dropdown-item" href="#" data-value="1/3">1/3</a></li>
+                                    <li><a class="dropdown-item" href="#" data-value="1/2">1/2</a></li>
+                                    <li><a class="dropdown-item" href="#" data-value="1">1</a></li>
+                                    <li><a class="dropdown-item" href="#" data-value="2">2</a></li>
+                                    <li><a class="dropdown-item" href="#" data-value="3">3</a></li>
+                                    <li><a class="dropdown-item" href="#" data-value="4">4</a></li>
+                                    <li><a class="dropdown-item" href="#" data-value="5">5</a></li>
+                                    <li><a class="dropdown-item" href="#" data-value="6">6</a></li>
+                                    <li><a class="dropdown-item" href="#" data-value="7">7</a></li>
+                                    <li><a class="dropdown-item" href="#" data-value="8">8</a></li>
+                                    <li><a class="dropdown-item" href="#" data-value="9">9</a></li>
+                                </ul>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+        return html;
+    }
+    
+    function generateMatrixTableHtml(indicators) {
+        let html = '';
+        for (let i = 0; i < indicators.length; i++) {
+            html += `<tr>`;
+            html += `<td>${indicators[i]}</td>`;
+            for (let j = 0; j < indicators.length; j++) {
+                if (i === j) {
+                    html += `<td>1（固定）</td>`;
+                } else {
+                    html += `<td id="cell-${i}-${j}">1</td>`;
+                }
+            }
+            html += `<td>参考标准：GB/T ...</td>`;
+            html += `</tr>`;
+        }
+        return html;
+    }
+    
+    function initScoreTableEvents() {
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('dropdown-item')) {
+                e.preventDefault();
+                var selectedValue = e.target.getAttribute('data-value');
+                var inputElement = e.target.closest('.input-group').querySelector('.matrix-input');
+                inputElement.value = selectedValue;
+                updateMatrixFromScores();
+            }
+        });
+        
+        document.addEventListener('change', function(e) {
+            if (e.target.classList.contains('matrix-input')) {
+                updateMatrixFromScores();
+            }
+        });
+    }
+    
+    function calculateReciprocal(value) {
+        if (value === '1') {
+            return '1';
+        } else if (value.includes('/')) {
+            // 处理分数输入，如 1/3，下三角显示为整数 3
+            const parts = value.split('/');
+            if (parts.length === 2) {
+                const numerator = parseFloat(parts[0]);
+                const denominator = parseFloat(parts[1]);
+                if (denominator !== 0) {
+                    // 当上三角为分数时，下三角显示为整数
+                    return denominator.toString();
+                } else {
+                    return '1';
+                }
+            } else {
+                return '1/' + value;
+            }
+        } else {
+            // 处理整数输入，如 3，下三角显示为分数 1/3
+            return '1/' + value;
+        }
+    }
+    
+    function updateMatrixFromScores() {
+        var scoreInputs = document.querySelectorAll('.matrix-input');
+        var scores = [];
+        scoreInputs.forEach(input => {
+            scores.push(input.value.trim());
+        });
+        
+        var upperTriangleCells = [];
+        var lowerTriangleCells = [];
+        var scoreIndex = 0;
+        
+        var matrixTable = document.querySelector('.matrix-table');
+        if (!matrixTable) return;
+        
+        var headerCells = matrixTable.querySelectorAll('thead th');
+        var indicatorCount = headerCells.length - 2;
+        
+        for (let i = 0; i < indicatorCount; i++) {
+            for (let j = i + 1; j < indicatorCount; j++) {
+                upperTriangleCells.push(`cell-${i}-${j}`);
+                lowerTriangleCells.push(`cell-${j}-${i}`);
+            }
+        }
+        
+        for (let i = 0; i < upperTriangleCells.length; i++) {
+            var cellId = upperTriangleCells[i];
+            var score = scores[i] || '1';
+            var cellElement = document.getElementById(cellId);
+            if (cellElement) {
+                cellElement.textContent = score;
+            }
+        }
+        
+        for (let i = 0; i < lowerTriangleCells.length; i++) {
+            var cellId = lowerTriangleCells[i];
+            var score = scores[i] || '1';
+            var reciprocalValue = calculateReciprocal(score);
+            var cellElement = document.getElementById(cellId);
+            if (cellElement) {
+                cellElement.textContent = reciprocalValue;
+            }
+        }
+    }
+    
+    function initMatrixCalculation() {
+        setTimeout(function() {
+            var matrixInputs = document.querySelectorAll('.matrix-input');
+            matrixInputs.forEach(input => {
+                input.dispatchEvent(new Event('change'));
+            });
+        }, 100);
+    }
+    
+    function initOperationButtons() {
+        document.addEventListener('click', function(e) {
+            var target = e.target.closest('#save-matrix-btn');
+            if (target) {
+                e.preventDefault();
+                e.stopPropagation();
+                calculateConsistency();
+            }
+        }, true);
+        
+        document.addEventListener('click', function(e) {
+            var target = e.target.closest('#clear-matrix-btn');
+            if (target) {
+                e.preventDefault();
+                e.stopPropagation();
+                var matrixInputs = document.querySelectorAll('.matrix-input');
+                matrixInputs.forEach(input => {
+                    input.value = '1';
+                });
+                
+                matrixInputs.forEach(input => {
+                    input.dispatchEvent(new Event('change'));
+                });
+                
+                var consistencyResult = document.getElementById('consistency-result');
+                if (consistencyResult) {
+                    consistencyResult.innerHTML = '<p class="card-text">λmax = [计算中...] | CI = [计算中...] | RI = [计算中...] | CR = [计算中...]</p>';
+                }
+            }
+        }, true);
+        
+        document.addEventListener('click', function(e) {
+            var target = e.target.closest('#submit-matrix-btn');
+            if (target) {
+                e.preventDefault();
+                e.stopPropagation();
+                var machineSelect = document.getElementById('machine-select');
+                if (machineSelect) {
+                    var machineId = machineSelect.value;
+                    if (!machineId) {
+                        alert('请先选择机床');
+                        return;
+                    }
+                }
+                
+                var consistencyResult = document.getElementById('consistency-result');
+                if (consistencyResult) {
+                    var resultText = consistencyResult.textContent;
+                    if (resultText.includes('[计算中...]')) {
+                        alert('请先点击"计算"按钮进行一致性检验');
+                        return;
+                    }
+                }
+                
+                var matrixTable = document.querySelector('.matrix-table');
+                if (!matrixTable) {
+                    alert('未找到矩阵表格');
+                    return;
+                }
+                
+                var headerCells = matrixTable.querySelectorAll('thead th');
+                var indicatorNames = [];
+                
+                headerCells.forEach((cell, index) => {
+                    if (index > 0 && index < headerCells.length - 1) {
+                        indicatorNames.push(cell.textContent);
+                    }
+                });
+                
+                var scoreInputs = document.querySelectorAll('.matrix-input');
+                var scores = [];
+                scoreInputs.forEach(input => {
+                    var inputValue = input.value.trim();
+                    if (inputValue.includes('/')) {
+                        var parts = inputValue.split('/');
+                        scores.push(parseFloat(parts[0]) / parseFloat(parts[1]));
+                    } else {
+                        scores.push(parseFloat(inputValue));
+                    }
+                });
+                
+                var n = indicatorNames.length;
+                var matrix = [];
+                var scoreIndex = 0;
+                
+                for (let i = 0; i < n; i++) {
+                    var row = [];
+                    for (let j = 0; j < n; j++) {
+                        if (i === j) {
+                            row.push(1.0);
+                        } else if (i < j) {
+                            row.push(scores[scoreIndex++] || 1.0);
+                        } else {
+                            var reciprocalScore = scores[scoreIndex - (i - j)] || 1.0;
+                            row.push(reciprocalScore > 0 ? 1.0 / reciprocalScore : 1.0);
+                        }
+                    }
+                    matrix.push(row);
+                }
+                
+                var csrfToken = document.querySelector('input[name="csrfmiddlewaretoken"]').value;
+                fetch('/evaluation/ahp/consistency/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken
+                    },
+                    body: JSON.stringify({
+                        matrix: matrix,
+                        indicator_names: indicatorNames
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        var consistency = data.data.consistency;
+                        var cr = consistency.CR;
+                        var isConsistent = cr < 0.1;
+                        
+                        if (isConsistent) {
+                            alert('打分提交成功！一致性检验通过。');
+                        } else {
+                            alert('打分提交成功！但一致性检验未通过，请重新评分。');
+                        }
+                    } else {
+                        alert('提交失败：' + (data.error || '未知错误'));
+                    }
+                })
+                .catch(error => {
+                    console.error('提交失败：', error);
+                    alert('提交失败，请稍后重试');
+                });
+            }
+        });
+    }
+    
+    function checkAllCirclesChecked() {
+        var level1Items = document.querySelectorAll('.level-1-item');
+        var precisionItem = null;
+        
+        level1Items.forEach(item => {
+            var titleElement = item.querySelector('.indicator-title');
+            if (titleElement && titleElement.textContent.trim() === '精度') {
+                precisionItem = item;
+            }
+        });
+        
+        if (precisionItem) {
+            var allCircles = precisionItem.querySelectorAll('.circle-icon');
+            
+            var allChecked = true;
+            allCircles.forEach(circle => {
+                if (!circle.classList.contains('checked')) {
+                    allChecked = false;
+                }
+            });
+            
+            var outputSaveBtn = document.getElementById('output-save-btn');
+            
+            if (allChecked) {
+                outputSaveBtn.disabled = false;
+                outputSaveBtn.style.backgroundColor = '#28a745';
+                outputSaveBtn.style.borderColor = '#28a745';
+            } else {
+                outputSaveBtn.disabled = true;
+                outputSaveBtn.style.backgroundColor = '#cccccc';
+                outputSaveBtn.style.borderColor = '#cccccc';
+            }
+        }
+    }
+    
+    window.addEventListener('load', function() {
+        checkAllCirclesChecked();
+        initOperationButtons();
+    });
+    
+    setInterval(checkAllCirclesChecked, 1000);
+    
+    document.addEventListener('click', function(e) {
+        if (e.target && e.target.id === 'save-weights-btn') {
+            if (window.currentLevel3Title) {
+                var targetTitle = window.currentLevel3Title.replace(/\s+/g, '');
+                
+                var found = false;
+                var level3Items = document.querySelectorAll('.level-3-item .indicator-header');
+                level3Items.forEach(header => {
+                    var titleElement = header.querySelector('.indicator-title');
+                    if (titleElement) {
+                        var titleText = titleElement.textContent.replace(/\s+/g, '');
+                        if (titleText === targetTitle) {
+                            var circleIcon = header.querySelector('.circle-icon');
+                            if (circleIcon) {
+                                circleIcon.classList.add('checked');
+                                found = true;
+                            }
+                        }
+                    }
+                });
+                
+                checkAllCirclesChecked();
+            }
+        }
+    });
+    
+    function calculateConsistency() {
+        var matrixTable = document.querySelector('.matrix-table');
+        if (!matrixTable) {
+            console.error('未找到矩阵表格');
+            alert('未找到矩阵表格');
+            return;
+        }
+        
+        var headerCells = matrixTable.querySelectorAll('thead th');
+        var indicatorNames = [];
+        
+        headerCells.forEach((cell, index) => {
+            if (index > 0 && index < headerCells.length - 1) {
+                indicatorNames.push(cell.textContent);
+            }
+        });
+        
+        var scoreInputs = document.querySelectorAll('.matrix-input');
+        
+        if (scoreInputs.length === 0) {
+            console.error('没有找到打分输入框');
+            alert('没有找到打分输入框，请确保已选择指标');
+            return;
+        }
+        
+        var scores = [];
+        scoreInputs.forEach((input, index) => {
+            var inputValue = input.value.trim();
+            if (inputValue.includes('/')) {
+                var parts = inputValue.split('/');
+                scores.push(parseFloat(parts[0]) / parseFloat(parts[1]));
+            } else {
+                var parsedValue = parseFloat(inputValue);
+                if (isNaN(parsedValue)) {
+                    console.error(`输入框 ${index} 的值无效: ${inputValue}`);
+                    alert(`输入框 ${index} 的值无效: ${inputValue}`);
+                    return;
+                }
+                scores.push(parsedValue);
+            }
+        });
+        
+        var n = indicatorNames.length;
+        
+        if (n === 0) {
+            console.error('指标数量为0');
+            alert('指标数量为0，无法计算');
+            return;
+        }
+        
+        var matrix = [];
+        var scoreIndex = 0;
+        
+        for (let i = 0; i < n; i++) {
+            var row = [];
+            for (let j = 0; j < n; j++) {
+                if (i === j) {
+                    row.push(1.0);
+                } else if (i < j) {
+                    row.push(scores[scoreIndex++] || 1.0);
+                } else {
+                    var reciprocalScore = scores[scoreIndex - (i - j)] || 1.0;
+                    row.push(reciprocalScore > 0 ? 1.0 / reciprocalScore : 1.0);
+                }
+            }
+            matrix.push(row);
+        }
+        
+        var consistency = calculateMatrixConsistency(matrix);
+        
+        var resultHtml = '<p class="card-text">';
+        resultHtml += 'λmax = [' + consistency.lambda_max.toFixed(3) + '] | ';
+        resultHtml += 'CI = [' + consistency.CI.toFixed(3) + '] | ';
+        resultHtml += 'RI = [' + consistency.RI.toFixed(2) + '] | ';
+        resultHtml += 'CR = [' + consistency.CR.toFixed(3) + '] ';
+        
+        if (consistency.CR < 0.1) {
+            resultHtml += '<span class="text-success">一致性通过√</span>';
+        } else {
+            resultHtml += '<span class="text-danger">一致性未通过，请重新评分</span>';
+        }
+        
+        resultHtml += '</p>';
+        
+        var consistencyResult = document.getElementById('consistency-result');
+        if (consistencyResult) {
+            consistencyResult.innerHTML = resultHtml;
+        } else {
+            console.error('未找到结果显示元素');
+            alert('未找到结果显示元素');
+        }
+    }
+    
+    function calculateMatrixConsistency(matrix) {
+        try {
+            var n = matrix.length;
+            
+            if (n === 0) {
+                throw new Error('矩阵为空');
+            }
+            
+            var weights = calculateWeights(matrix);
+            
+            var lambdaMax = 0;
+            for (let i = 0; i < n; i++) {
+                var sum = 0;
+                for (let j = 0; j < n; j++) {
+                    sum += matrix[i][j] * weights[j];
+                }
+                lambdaMax += sum / weights[i];
+            }
+            lambdaMax = lambdaMax / n;
+            
+            var CI = (lambdaMax - n) / (n - 1);
+            
+            var RIValues = [0, 0, 0, 0.58, 0.9, 1.12, 1.24, 1.32, 1.41, 1.45, 1.49];
+            var RI = RIValues[n - 1] || 1.49;
+            
+            var CR = CI / RI;
+            
+            return {
+                lambda_max: lambdaMax,
+                CI: CI,
+                RI: RI,
+                CR: CR
+            };
+        } catch (error) {
+            console.error('计算矩阵一致性时出错:', error);
+            alert('计算矩阵一致性时出错: ' + error.message);
+            return {
+                lambda_max: 0,
+                CI: 0,
+                RI: 0,
+                CR: 0
+            };
+        }
+    }
+    
+    function calculateWeights(matrix) {
+        try {
+            var n = matrix.length;
+            
+            if (n === 0) {
+                throw new Error('矩阵为空');
+            }
+            
+            var columnSums = [];
+            for (let j = 0; j < n; j++) {
+                var sum = 0;
+                for (let i = 0; i < n; i++) {
+                    sum += matrix[i][j];
+                }
+                columnSums.push(sum);
+            }
+            
+            for (let j = 0; j < n; j++) {
+                if (columnSums[j] === 0) {
+                    throw new Error(`第${j + 1}列的和为0，无法计算权重`);
+                }
+            }
+            
+            var normalizedMatrix = [];
+            for (let i = 0; i < n; i++) {
+                var row = [];
+                for (let j = 0; j < n; j++) {
+                    row.push(matrix[i][j] / columnSums[j]);
+                }
+                normalizedMatrix.push(row);
+            }
+            
+            var weights = [];
+            for (let i = 0; i < n; i++) {
+                var sum = 0;
+                for (let j = 0; j < n; j++) {
+                    sum += normalizedMatrix[i][j];
+                }
+                weights.push(sum / n);
+            }
+            
+            return weights;
+        } catch (error) {
+            console.error('计算权重向量时出错:', error);
+            throw error;
+        }
+    }
+    
+    function updateTableByIndicator(indicatorTitle) {
+        $('.feed-axis-accuracy-table-container').remove();
+        $('.worktable-accuracy-table-container').remove();
+        $('.position-accuracy-table-container').remove();
+        
+        var tableHeader = $('#data-table-header');
+        var dataEntryContainer = $('.data-entry-container');
+        
+        if (indicatorTitle === '进给轴精度') {
+            addFeedAxisAccuracyTable(dataEntryContainer);
+            tableHeader.html('<th>组别</th><th>直线度</th><th>平行度</th><th>角度误差</th><th>垂直度</th>');
+        } else if (indicatorTitle === '工作台精度') {
+            addWorktableAccuracyTable(dataEntryContainer);
+            tableHeader.html('<th>组别</th><th>平面度</th><th>直线度</th><th>T型槽平行度</th>');
+        } else if (indicatorTitle === '位置精度') {
+            addPositionAccuracyTable(dataEntryContainer);
+            tableHeader.html('<th>组别</th><th>重复定位精度</th><th>定位精度</th><th>平均位置偏移</th><th>定位系统偏差</th><th>最小分辨率</th><th>反向间隙（差值）</th>');
+        } else if (indicatorTitle === '主轴精度') {
+            tableHeader.html('<th>组别</th><th>圆度</th><th>同轴度</th><th>主轴径向跳动</th><th>轴端面跳动</th><th>主轴轴向窜动</th>');
+        } else if (indicatorTitle === '刀库精度') {
+            tableHeader.html('<th>组别</th><th>刀库定位精度</th><th>刀库重复定位精度</th>');
+        } else if (indicatorTitle === '微观几何形状误差') {
+            tableHeader.html('<th>组别</th><th>表面粗糙度</th><th>加工工序能力</th><th>尺寸精度</th>');
+        } else if (indicatorTitle === '加工分散性') {
+            tableHeader.html('<th>组别</th><th>圆度</th><th>圆柱度</th><th>平面度</th><th>直线度</th><th>粗糙度</th>');
+        } else if (indicatorTitle === '工件几何精度') {
+            tableHeader.html('<th>组别</th><th>尺寸精度</th><th>形状精度</th>');
+        } else if (indicatorTitle === '加工精度') {
+            tableHeader.html('<th>组别</th><th>微观几何形状误差</th><th>加工分散性</th><th>工件几何精度</th>');
+        } else {
+            tableHeader.html('<th>组别</th><th>指标1</th><th>指标2</th><th>指标3</th><th>指标4</th>');
+        }
+        
+        updateTableRows();
+    }
+    
+    function addFeedAxisAccuracyTable(container) {
+        if (container.find('.feed-axis-accuracy-table-container').length) return;
+        
+        var detailedTableHtml = `
+            <div class="feed-axis-accuracy-table-container mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h6 class="font-weight-bold mb-0">表1</h6>
+                    <button class="btn btn-sm btn-primary" id="calculate-scores-btn">计算得分</button>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-bordered table-sm">
+                        <thead class="table-light">
+                            <tr>
+                                <th rowspan="2">组别</th>
+                                <th colspan="3">X轴直线度</th>
+                                <th colspan="3">Z轴直线度</th>
+                                <th colspan="3">Y轴直线度</th>
+                                <th colspan="3">平行度</th>
+                            </tr>
+                            <tr>
+                                <th>XY平面</th>
+                                <th>ZX平面</th>
+                                <th>允差</th>
+                                <th>YZ平面</th>
+                                <th>ZX平面</th>
+                                <th>允差</th>
+                                <th>XY平面</th>
+                                <th>YZ平面</th>
+                                <th>允差</th>
+                                <th>YZ平面</th>
+                                <th>ZX平面</th>
+                                <th>允差</th>
+                            </tr>
+                        </thead>
+                        <tbody id="feed-axis-accuracy-table">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        `;
+        container.prepend(detailedTableHtml);
+        updateFeedAxisAccuracyTable();
+    }
+    
+    function addWorktableAccuracyTable(container) {
+        if (container.find('.worktable-accuracy-table-container').length) return;
+        
+        var detailedTableHtml = `
+            <div class="worktable-accuracy-table-container mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h6 class="font-weight-bold mb-0">表1</h6>
+                    <button class="btn btn-sm btn-primary" id="calculate-worktable-scores-btn">计算得分</button>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-bordered table-sm">
+                        <thead class="table-light">
+                            <tr>
+                                <th rowspan="2">组别</th>
+                                <th colspan="2">平面度</th>
+                                <th colspan="2">直线度</th>
+                                <th colspan="2">T型槽平行度</th>
+                            </tr>
+                            <tr>
+                                <th>实测值</th>
+                                <th>允差</th>
+                                <th>实测值</th>
+                                <th>允差</th>
+                                <th>实测值</th>
+                                <th>允差</th>
+                            </tr>
+                        </thead>
+                        <tbody id="worktable-accuracy-table">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        `;
+        container.prepend(detailedTableHtml);
+        updateWorktableAccuracyTable();
+    }
+    
+    function addPositionAccuracyTable(container) {
+        if (container.find('.position-accuracy-table-container').length) return;
+        
+        var detailedTableHtml = `
+            <div class="position-accuracy-table-container mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h6 class="font-weight-bold mb-0">表1</h6>
+                    <button class="btn btn-sm btn-primary" id="calculate-position-scores-btn">计算得分</button>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-bordered table-sm">
+                        <thead class="table-light">
+                            <tr>
+                                <th rowspan="2">组别</th>
+                                <th colspan="2">重复定位精度</th>
+                                <th colspan="2">定位精度</th>
+                                <th colspan="2">平均位置偏移</th>
+                            </tr>
+                            <tr>
+                                <th>实测值</th>
+                                <th>允差</th>
+                                <th>实测值</th>
+                                <th>允差</th>
+                                <th>实测值</th>
+                                <th>允差</th>
+                            </tr>
+                        </thead>
+                        <tbody id="position-accuracy-table">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        `;
+        container.prepend(detailedTableHtml);
+        updatePositionAccuracyTable();
+    }
+    
+    // 更新表格行数
+    function updateTableRows() {
+        var sampleCount = parseInt($('#sample-count').val()) || 2;
+        var tbody = $('#data-table-body');
+        var currentRows = tbody.find('tr').length;
+        
+        if (currentRows < sampleCount) {
+            for (var i = currentRows + 1; i <= sampleCount; i++) {
+                addTableRow(tbody, i);
+            }
+        } else if (currentRows > sampleCount) {
+            tbody.find('tr').slice(sampleCount).remove();
+        }
+    }
+    
+    function addTableRow(tbody, rowNum) {
+        var colCount = $('#data-table-header th').length - 1;
+        var rowHtml = '<tr><td>' + rowNum + '</td>';
+        for (var i = 0; i < colCount; i++) {
+            rowHtml += '<td><input type="number" class="form-control form-control-sm" value="0" step="0.0001"></td>';
+        }
+        rowHtml += '</tr>';
+        tbody.append(rowHtml);
+    }
+    
+    function updateFeedAxisAccuracyTable() {
+        var sampleCount = parseInt($('#sample-count').val()) || 2;
+        var tbody = $('#feed-axis-accuracy-table');
+        tbody.empty();
+        
+        for (var i = 1; i <= sampleCount; i++) {
+            var rowHtml = '<tr>' +
+                '<td>' + i + '</td>' +
+                '<td><input type="number" class="form-control form-control-sm" value="0" step="0.0001"></td>' +
+                '<td><input type="number" class="form-control form-control-sm" value="0" step="0.0001"></td>' +
+                '<td><input type="number" class="form-control form-control-sm" value="0" step="0.0001"></td>' +
+                '<td><input type="number" class="form-control form-control-sm" value="0" step="0.0001"></td>' +
+                '<td><input type="number" class="form-control form-control-sm" value="0" step="0.0001"></td>' +
+                '<td><input type="number" class="form-control form-control-sm" value="0" step="0.0001"></td>' +
+                '<td><input type="number" class="form-control form-control-sm" value="0" step="0.0001"></td>' +
+                '<td><input type="number" class="form-control form-control-sm" value="0" step="0.0001"></td>' +
+                '<td><input type="number" class="form-control form-control-sm" value="0" step="0.0001"></td>' +
+                '<td><input type="number" class="form-control form-control-sm" value="0" step="0.0001"></td>' +
+                '<td><input type="number" class="form-control form-control-sm" value="0" step="0.0001"></td>' +
+                '<td><input type="number" class="form-control form-control-sm" value="0" step="0.0001"></td>' +
+                '</tr>';
+            tbody.append(rowHtml);
+        }
+    }
+    
+    function updateWorktableAccuracyTable() {
+        var sampleCount = parseInt($('#sample-count').val()) || 2;
+        var tbody = $('#worktable-accuracy-table');
+        tbody.empty();
+        
+        for (var i = 1; i <= sampleCount; i++) {
+            var rowHtml = '<tr>' +
+                '<td>' + i + '</td>' +
+                '<td><input type="number" class="form-control form-control-sm" value="0" step="0.0001"></td>' +
+                '<td><input type="number" class="form-control form-control-sm" value="0" step="0.0001"></td>' +
+                '<td><input type="number" class="form-control form-control-sm" value="0" step="0.0001"></td>' +
+                '<td><input type="number" class="form-control form-control-sm" value="0" step="0.0001"></td>' +
+                '<td><input type="number" class="form-control form-control-sm" value="0" step="0.0001"></td>' +
+                '<td><input type="number" class="form-control form-control-sm" value="0" step="0.0001"></td>' +
+                '</tr>';
+            tbody.append(rowHtml);
+        }
+    }
+    
+    function updatePositionAccuracyTable() {
+        var sampleCount = parseInt($('#sample-count').val()) || 2;
+        var tbody = $('#position-accuracy-table');
+        tbody.empty();
+        
+        for (var i = 1; i <= sampleCount; i++) {
+            var rowHtml = '<tr>' +
+                '<td>' + i + '</td>' +
+                '<td><input type="number" class="form-control form-control-sm" value="0" step="0.0001"></td>' +
+                '<td><input type="number" class="form-control form-control-sm" value="0" step="0.0001"></td>' +
+                '<td><input type="number" class="form-control form-control-sm" value="0" step="0.0001"></td>' +
+                '<td><input type="number" class="form-control form-control-sm" value="0" step="0.0001"></td>' +
+                '<td><input type="number" class="form-control form-control-sm" value="0" step="0.0001"></td>' +
+                '<td><input type="number" class="form-control form-control-sm" value="0" step="0.0001"></td>' +
+                '</tr>';
+            tbody.append(rowHtml);
+        }
+    }
+    
+    $('#sample-count').on('change', function() {
+        updateTableRows();
+        if ($('#feed-axis-accuracy-table').length) {
+            updateFeedAxisAccuracyTable();
+        }
+        if ($('#worktable-accuracy-table').length) {
+            updateWorktableAccuracyTable();
+        }
+        if ($('#position-accuracy-table').length) {
+            updatePositionAccuracyTable();
+        }
+    });
+    
+    $(document).off('click', '#save-result-btn').on('click', '#save-result-btn', function() {
+        var btn = $(this);
+        btn.text('保存中...').prop('disabled', true);
+        
+        var resultTable = $('#calculation-result table');
+        if (!resultTable.length) {
+            alert('请先计算权重');
+            btn.text('保存结果').prop('disabled', false);
+            return;
+        }
+        
+        var results = [];
+        resultTable.find('tbody tr').each(function() {
+            var indicatorName = $(this).find('td:eq(0)').text();
+            var entropyValue = $(this).find('td:eq(1)').text();
+            var weightValue = $(this).find('td:eq(2)').text();
+            
+            results.push({
+                indicator_name: indicatorName,
+                entropy_value: entropyValue,
+                weight_value: weightValue
+            });
+        });
+        
+        var inputData = [];
+        $('#data-table-body tr').each(function() {
+            var machineName = $(this).find('td:eq(0)').text();
+            var value1 = $(this).find('input:eq(0)').val() || '0';
+            var value2 = $(this).find('input:eq(1)').val() || '0';
+            var value3 = $(this).find('input:eq(2)').val() || '0';
+            var value4 = $(this).find('input:eq(3)').val() || '0';
+            
+            inputData.push({
+                machine_name: machineName,
+                value1: value1,
+                value2: value2,
+                value3: value3,
+                value4: value4
+            });
+        });
+        
+        $.ajax({
+            url: '/evaluation/api/save-entropy-result/',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({
+                results: results,
+                input_data: inputData,
+                indicator: window.currentLevel3Title
+            }),
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            success: function(response) {
+                btn.text('保存结果').prop('disabled', false);
+                
+                if (response.success) {
+                    alert('计算结果保存成功！');
+                    
+                    if (window.currentLevel3Title) {
+                        var targetTitle = window.currentLevel3Title.replace(/\s+/g, '');
+                        
+                        var found = false;
+                        var level3Items = document.querySelectorAll('.level-3-item .indicator-header');
+                        level3Items.forEach(header => {
+                            var titleElement = header.querySelector('.indicator-title');
+                            if (titleElement) {
+                                var titleText = titleElement.textContent.replace(/\s+/g, '');
+                                if (titleText === targetTitle) {
+                                    var circleIcon = header.querySelector('.circle-icon');
+                                    if (circleIcon) {
+                                        circleIcon.classList.add('checked');
+                                        found = true;
+                                    }
+                                }
+                            }
+                        });
+                        
+                        if (!found) {
+                            var level2Items = document.querySelectorAll('.level-2-item .indicator-header');
+                            level2Items.forEach(header => {
+                                var titleElement = header.querySelector('.indicator-title');
+                                if (titleElement) {
+                                    var titleText = titleElement.textContent.replace(/\s+/g, '');
+                                    if (titleText === targetTitle) {
+                                        var circleIcon = header.querySelector('.circle-icon');
+                                        if (circleIcon) {
+                                            circleIcon.classList.add('checked');
+                                            found = true;
+                                        }
+                                    }
+                                }
+                            });
+                        }
+                        
+                        if (!found) {
+                            var level1Items = document.querySelectorAll('.level-1-item .indicator-header');
+                            level1Items.forEach(header => {
+                                var titleElement = header.querySelector('.indicator-title');
+                                if (titleElement) {
+                                    var titleText = titleElement.textContent.replace(/\s+/g, '');
+                                    if (titleText === targetTitle) {
+                                        var circleIcon = header.querySelector('.circle-icon');
+                                        if (circleIcon) {
+                                            circleIcon.classList.add('checked');
+                                            found = true;
+                                        }
+                                    }
+                                }
+                            });
+                        }
+                    }
+                } else {
+                    alert('保存失败：' + (response.message || '未知错误'));
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('保存失败：', error);
+                btn.text('保存结果').prop('disabled', false);
+                alert('保存失败，请稍后重试');
+            }
+        });
+    });
+    
+    function getCookie(name) {
+        var cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            var cookies = document.cookie.split(';');
+            for (var i = 0; i < cookies.length; i++) {
+                var cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+});
+</script>
+{% endblock %}

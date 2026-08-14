@@ -1,0 +1,124 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">添加AHP权重</h1>
+        <div>
+            <a href="{% url 'ahp_weight_management' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> 返回列表
+            </a>
+        </div>
+    </div>
+
+    <div class="alert alert-info" role="alert">
+        <h4 class="alert-heading">添加新权重</h4>
+        <p>请填写以下信息来添加新的AHP权重数据。</p>
+        <ul>
+            <li>路径：用于标识权重所属的指标路径，如"精度/几何精度"</li>
+            <li>指标名称：输入JSON数组格式，如["直线度", "平行度", "垂直度"]</li>
+            <li>权重值：输入JSON数组格式，如[0.4, 0.35, 0.25]</li>
+            <li>权重值总和应接近1</li>
+        </ul>
+    </div>
+
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">权重信息</h6>
+        </div>
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+
+                <div class="form-group">
+                    <label for="path" class="form-label font-weight-bold">路径</label>
+                    <input type="text" class="form-control" id="path" name="path" required placeholder="例如：精度/几何精度">
+                </div>
+
+                <div class="form-group">
+                    <label for="indicator_names" class="form-label font-weight-bold">指标名称</label>
+                    <textarea class="form-control" id="indicator_names" name="indicator_names" rows="2" required placeholder='例如：["直线度", "平行度", "垂直度"]'></textarea>
+                    <small class="form-text text-muted">请输入JSON数组格式的指标名称</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="weights" class="form-label font-weight-bold">权重值</label>
+                    <textarea class="form-control" id="weights" name="weights" rows="2" required placeholder='例如：[0.4, 0.35, 0.25]'></textarea>
+                    <small class="form-text text-muted">请输入JSON数组格式的权重值，权重值总和应接近1</small>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label font-weight-bold">预览</label>
+                    <div id="weightPreview" class="bg-light p-3 rounded">
+                        <p class="text-gray-500">输入权重后将显示预览</p>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <button type="submit" class="btn btn-primary btn-lg btn-block">
+                        <i class="fas fa-save"></i> 保存权重
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        function updatePreview() {
+            var namesText = $('#indicator_names').val();
+            var weightsText = $('#weights').val();
+
+            if (!namesText || !weightsText) {
+                $('#weightPreview').html('<p class="text-gray-500">输入权重后将显示预览</p>');
+                return;
+            }
+
+            try {
+                var names = JSON.parse(namesText);
+                var weights = JSON.parse(weightsText);
+
+                if (!Array.isArray(names) || !Array.isArray(weights)) {
+                    throw new Error('指标名称和权重都必须是数组格式');
+                }
+
+                if (names.length !== weights.length) {
+                    $('#weightPreview').html('<div class="alert alert-danger" role="alert">警告：指标数量与权重数量不一致！</div>');
+                    return;
+                }
+
+                var sum = weights.reduce(function(a, b) { return a + b; }, 0);
+                var html = '<h6>权重预览</h6>';
+                html += '<table class="table table-sm">';
+                html += '<thead><tr><th>序号</th><th>指标名称</th><th>权重值</th><th>百分比</th></tr></thead>';
+                html += '<tbody>';
+
+                for (var i = 0; i < weights.length; i++) {
+                    var percent = (weights[i] * 100).toFixed(2);
+                    html += '<tr><td>' + (i + 1) + '</td><td>' + names[i] + '</td><td>' + weights[i].toFixed(4) + '</td><td>' + percent + '%</td></tr>';
+                }
+
+                html += '<tr class="font-weight-bold"><td>合计</td><td>-</td><td>' + sum.toFixed(4) + '</td><td>' + (sum * 100).toFixed(2) + '%</td></tr>';
+                html += '</tbody></table>';
+
+                if (Math.abs(sum - 1) > 0.01) {
+                    html += '<div class="alert alert-warning mt-2" role="alert">';
+                    html += '警告：权重总和与1相差较大，请检查输入';
+                    html += '</div>';
+                } else {
+                    html += '<div class="alert alert-success mt-2" role="alert">权重总和无问题</div>';
+                }
+
+                $('#weightPreview').html(html);
+            } catch (e) {
+                $('#weightPreview').html('<div class="alert alert-danger" role="alert">格式错误：' + e.message + '</div>');
+            }
+        }
+
+        $('#indicator_names, #weights').on('input', updatePreview);
+    });
+</script>
+{% endblock %}

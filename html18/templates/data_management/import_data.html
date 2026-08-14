@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block page_title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h5>导入机床数据</h5>
+    </div>
+    <div class="card-body">
+        <form method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="mb-4">
+                <label for="file-upload" class="form-label">选择文件</label>
+                <input type="file" class="form-control" id="file-upload" name="data_file" accept=".xlsx,.xls,.csv">
+                <div class="form-text">支持 Excel (.xlsx, .xls) 和 CSV 格式的文件</div>
+            </div>
+            
+            <div class="mb-4">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="validate-data" name="validate_data" checked>
+                    <label class="form-check-label" for="validate-data">验证数据有效性</label>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <a href="{% url 'machine_list' %}" class="btn btn-secondary">返回</a>
+                </div>
+                <div class="col-md-6 text-right">
+                    <button type="submit" class="btn btn-primary">开始导入</button>
+                </div>
+            </div>
+        </form>
+        
+        <div class="mt-4">
+            <h6>导入说明</h6>
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item">文件应包含机床的基本信息，如名称、型号、制造商等</li>
+                <li class="list-group-item">首次导入时建议使用"替换现有数据"选项</li>
+                <li class="list-group-item">导入过程可能需要几分钟时间，请耐心等待</li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

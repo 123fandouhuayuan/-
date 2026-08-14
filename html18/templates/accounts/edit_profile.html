@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h5>编辑个人资料</h5>
+    </div>
+    <div class="card-body">
+        <form method="POST">
+            {% csrf_token %}
+            
+            <div class="mb-3">
+                <label for="id_username" class="form-label">用户名</label>
+                <input type="text" class="form-control" id="id_username" value="{{ user_profile.user.username }}" readonly>
+                <div class="form-text">用户名不能修改</div>
+            </div>
+            
+            <div class="mb-3">
+                <label for="id_email" class="form-label">联系邮箱</label>
+                <input type="email" class="form-control" id="id_email" name="email" value="{{ user_profile.email }}" required>
+                <div class="form-text">请输入有效的邮箱地址</div>
+            </div>
+            
+            <div class="mb-3">
+                <label for="id_company" class="form-label">公司名称</label>
+                <input type="text" class="form-control" id="id_company" name="company" value="{{ user_profile.company }}" required>
+            </div>
+            
+            <div class="mb-3">
+                <label for="id_phone" class="form-label">电话</label>
+                <input type="tel" class="form-control" id="id_phone" name="phone" value="{{ user_profile.phone }}" required>
+                <div class="form-text">请输入有效的联系电话</div>
+            </div>
+            
+            <div class="mb-3">
+                <label class="form-label">用户角色</label>
+                <input type="text" class="form-control" value="{{ user_profile.get_role_display }}" readonly>
+                <div class="form-text">用户角色不能修改，如需修改请联系管理员</div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <a href="{% url 'profile' %}" class="btn btn-secondary">取消</a>
+                </div>
+                <div class="col-md-6 text-right">
+                    <button type="submit" class="btn btn-primary">保存修改</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

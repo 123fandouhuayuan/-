@@ -1,0 +1,285 @@
+﻿{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/report/generate.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="page-header">
+        <div class="row align-items-center">
+            <div class="col-md-6">
+                <h4><i class="fas fa-file-medical me-2"></i>生成评价报告</h4>
+                <p class="mb-0 opacity-75">选择机床和报告类型，生成详细的质量评价报告</p>
+            </div>
+            <div class="col-md-6 text-md-end">
+                <a href="{% url 'report_list' %}" class="btn btn-outline-light">
+                    <i class="fas fa-list me-1"></i>报告列表
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="wizard-container">
+        <div class="wizard-steps progress-1" id="wizardProgress">
+            <div class="wizard-step active" data-step="1">
+                <div class="step-circle">1</div>
+                <div class="step-label">选择机床</div>
+            </div>
+            <div class="wizard-step" data-step="2">
+                <div class="step-circle">2</div>
+                <div class="step-label">选择类型</div>
+            </div>
+            <div class="wizard-step" data-step="3">
+                <div class="step-circle">3</div>
+                <div class="step-label">配置选项</div>
+            </div>
+            <div class="wizard-step" data-step="4">
+                <div class="step-circle">4</div>
+                <div class="step-label">生成报告</div>
+            </div>
+        </div>
+
+        <div class="step-content active" id="step1">
+            <div class="filter-bar">
+                <div class="row g-3">
+                    <div class="col-md-5">
+                        <div class="input-group">
+                            <span class="input-group-text bg-white border-end-0">
+                                <i class="fas fa-search text-muted"></i>
+                            </span>
+                            <input type="text" class="form-control border-start-0" id="machineSearch" placeholder="搜索机床名称或型号...">
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <select class="form-select" id="machineTypeFilter">
+                            <option value="">所有类型</option>
+                            <option value="machining_center">加工中心</option>
+                            <option value="boring_milling_machine">镗铣床</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <select class="form-select" id="evalStatusFilter">
+                            <option value="">所有状态</option>
+                            <option value="evaluated">已评价</option>
+                            <option value="pending">待评价</option>
+                        </select>
+                    </div>
+                    <div class="col-md-1">
+                        <span class="badge bg-light text-dark p-2" id="machineCount">{{ machines|length }}</span>
+                    </div>
+                </div>
+            </div>
+
+            {% if machines %}
+            <div class="machine-grid" id="machineList">
+                {% for machine in machines %}
+                <div class="machine-item" 
+                     data-type="{{ machine.machine_type }}" 
+                     data-name="{{ machine.name }} {{ machine.model }}"
+                     data-status="{% if machine.admin_saved %}evaluated{% else %}pending{% endif %}"
+                     data-id="{{ machine.id }}">
+                    <div class="machine-card" data-id="{{ machine.id }}">
+                        <div class="check-icon">
+                            <i class="fas fa-check"></i>
+                        </div>
+                        <div class="machine-icon">
+                            <i class="fas fa-industry"></i>
+                        </div>
+                        <div class="machine-name">{{ machine.name }}</div>
+                        <div class="machine-meta">
+                            <span><i class="fas fa-tag me-1"></i>型号: {{ machine.model }}</span>
+                            <span><i class="fas fa-cog me-1"></i>{{ machine.get_machine_type_display }}</span>
+                        </div>
+                        <span class="status-badge {% if machine.admin_saved %}evaluated{% else %}pending{% endif %}">
+                            <i class="fas fa-{% if machine.admin_saved %}check-circle{% else %}clock{% endif %}"></i>
+                            {% if machine.admin_saved %}已评价{% else %}待评价{% endif %}
+                        </span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <div class="icon">
+                    <i class="fas fa-folder-open"></i>
+                </div>
+                <h5>暂无机床数据</h5>
+                <p>请先添加机床信息后再生成报告</p>
+                <a href="{% url 'machine_list' %}" class="btn btn-primary">
+                    <i class="fas fa-plus me-1"></i>添加机床
+                </a>
+            </div>
+            {% endif %}
+
+            <div class="action-buttons">
+                <div></div>
+                <button class="btn btn-primary" id="nextToStep2" disabled>
+                    下一步 <i class="fas fa-arrow-right ms-1"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="step-content" id="step2">
+            <div class="type-grid">
+                <div class="type-card" data-type="single">
+                    <div class="type-icon">
+                        <i class="fas fa-file"></i>
+                    </div>
+                    <h6>单个机床报告</h6>
+                    <p>生成单台机床的详细评价报告</p>
+                </div>
+                <div class="type-card" data-type="multiple">
+                    <div class="type-icon">
+                        <i class="fas fa-files"></i>
+                    </div>
+                    <h6>多机床对比报告</h6>
+                    <p>对比多台机床的评价结果</p>
+                </div>
+                <div class="type-card" data-type="summary">
+                    <div class="type-icon">
+                        <i class="fas fa-chart-pie"></i>
+                    </div>
+                    <h6>汇总分析报告</h6>
+                    <p>汇总所有机床的评价数据</p>
+                </div>
+                <div class="type-card" data-type="detailed">
+                    <div class="type-icon">
+                        <i class="fas fa-file-contract"></i>
+                    </div>
+                    <h6>详细技术报告</h6>
+                    <p>包含完整技术参数和分析</p>
+                </div>
+            </div>
+
+            <div class="action-buttons">
+                <button class="btn btn-outline-secondary" id="backToStep1">
+                    <i class="fas fa-arrow-left me-1"></i> 上一步
+                </button>
+                <button class="btn btn-primary" id="nextToStep3" disabled>
+                    下一步 <i class="fas fa-arrow-right ms-1"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="step-content" id="step3">
+            <div class="config-section">
+                <div class="config-group">
+                    <h6><i class="fas fa-sliders-h"></i>基本设置</h6>
+                    <div class="mb-3">
+                        <label class="form-label text-muted small">报告格式</label>
+                        <select class="form-select" id="reportFormat">
+                            <option value="html">HTML 页面（在线查看）</option>
+                            <option value="pdf">PDF 文档（打印导出）</option>
+                            <option value="excel">Excel 表格（数据分析）</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="form-label text-muted small">报告标题（可选）</label>
+                        <input type="text" class="form-control" id="reportTitle" placeholder="留空使用默认标题">
+                    </div>
+                </div>
+                
+                <div class="config-group">
+                    <h6><i class="fas fa-list-check"></i>报告内容</h6>
+                    <div class="config-item">
+                        <input class="form-check-input" type="checkbox" id="includeSummary" checked>
+                        <label for="includeSummary">
+                            <i class="fas fa-file-alt text-primary"></i>包含摘要概述
+                        </label>
+                    </div>
+                    <div class="config-item">
+                        <input class="form-check-input" type="checkbox" id="includeDetails" checked>
+                        <label for="includeDetails">
+                            <i class="fas fa-list text-success"></i>包含详细数据
+                        </label>
+                    </div>
+                    <div class="config-item">
+                        <input class="form-check-input" type="checkbox" id="includeCharts" checked>
+                        <label for="includeCharts">
+                            <i class="fas fa-chart-bar text-info"></i>包含图表分析
+                        </label>
+                    </div>
+                    <div class="config-item">
+                        <input class="form-check-input" type="checkbox" id="includeRecommendations" checked>
+                        <label for="includeRecommendations">
+                            <i class="fas fa-lightbulb text-warning"></i>包含改进建议
+                        </label>
+                    </div>
+                    <div class="config-item">
+                        <input class="form-check-input" type="checkbox" id="includeMethodology">
+                        <label for="includeMethodology">
+                            <i class="fas fa-calculator text-secondary"></i>包含评价方法说明
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="preview-card">
+                <h6><i class="fas fa-eye"></i>报告预览</h6>
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="preview-item">
+                            <span class="label">报告编号</span>
+                            <span class="value" id="previewReportNumber">-</span>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="preview-item">
+                            <span class="label">机床型号</span>
+                            <span class="value" id="previewMachineModel">-</span>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="preview-item">
+                            <span class="label">报告类型</span>
+                            <span class="value" id="previewReportType">单个机床报告</span>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="preview-item">
+                            <span class="label">输出格式</span>
+                            <span class="value" id="previewFormat">HTML 页面</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="action-buttons">
+                <button class="btn btn-outline-secondary" id="backToStep2">
+                    <i class="fas fa-arrow-left me-1"></i> 上一步
+                </button>
+                <button class="btn btn-primary" id="generateReport">
+                    <i class="fas fa-magic me-1"></i> 生成报告
+                </button>
+            </div>
+        </div>
+
+        <div class="step-content" id="step4">
+            <div class="success-container">
+                <div class="success-icon">
+                    <i class="fas fa-check"></i>
+                </div>
+                <h4>报告生成成功！</h4>
+                <p class="text-muted mb-2">报告编号</p>
+                <div class="report-number" id="generatedReportNumber">-</div>
+                <div class="success-actions">
+                    <a href="#" class="btn btn-primary" id="viewReportBtn">
+                        <i class="fas fa-eye me-1"></i>查看报告
+                    </a>
+                    <a href="{% url 'report_list' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-list me-1"></i>返回列表
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/report/generate.js' %}"></script>
+{% endblock %}

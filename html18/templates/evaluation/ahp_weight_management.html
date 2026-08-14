@@ -1,0 +1,156 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- 页面标题 -->
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">{{ title }}</h1>
+        <div>
+            <a href="{% url 'add_ahp_weight' %}" class="btn btn-success mr-2">
+                <i class="fas fa-plus"></i> 添加AHP权重
+            </a>
+            <a href="{% url 'evaluation_dashboard' %}" class="btn btn-secondary mr-2">
+                <i class="fas fa-arrow-left"></i> 返回
+            </a>
+        </div>
+    </div>
+
+    <!-- 操作提示 -->
+    <div class="alert alert-info" role="alert">
+        <h4 class="alert-heading">操作说明</h4>
+        <p>本页面用于管理AHP层次分析法中的权重数据。您可以：</p>
+        <ul>
+            <li>查看各级指标的权重配置</li>
+            <li>修改现有权重值</li>
+            <li>权重值必须以JSON数组格式输入，例如：[0.25, 0.25, 0.25, 0.25]</li>
+            <li>权重值总和应接近1（允许轻微误差）</li>
+        </ul>
+    </div>
+
+    <!-- 搜索栏 -->
+    <div class="card shadow mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-6">
+                    <div class="input-group">
+                        <input type="text" class="form-control" name="search" placeholder="搜索路径..." value="{{ search_query|default:'' }}">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-search"></i> 搜索
+                        </button>
+                        {% if search_query %}
+                            <a href="{% url 'ahp_weight_management' %}" class="btn btn-secondary">
+                                <i class="fas fa-times"></i> 清除
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 权重列表 -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">AHP权重列表</h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th class="text-center">路径</th>
+                            <th class="text-center">指标名称</th>
+                            <th class="text-center">权重值</th>
+                            <th class="text-center">提交时间</th>
+                            <th class="text-center">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for matrix in all_matrices %}
+                            <tr>
+                                <td class="text-center align-middle"><strong>{{ matrix.path }}</strong></td>
+                                <td class="text-center align-middle">
+                                    {% if matrix.indicator_names %}
+                                        <ul class="list-unstyled">
+                                            {% for name in matrix.indicator_names %}
+                                                <li>{{ name }}</li>
+                                            {% endfor %}
+                                        </ul>
+                                    {% else %}
+                                        无
+                                    {% endif %}
+                                </td>
+                                <td class="text-center align-middle">
+                                    {% if matrix.weights %}
+                                        <code>{{ matrix.weights }}</code>
+                                    {% else %}
+                                        未设置
+                                    {% endif %}
+                                </td>
+                                <td class="text-center align-middle">{{ matrix.submitted_at|date:"Y-m-d H:i:s" }}</td>
+                                <td class="text-center align-middle">
+                                    <a href="{% url 'update_ahp_weight' matrix.id %}" class="btn btn-primary btn-sm mb-2">
+                                        <i class="fas fa-edit"></i> 修改
+                                    </a>
+                                    <button type="button" class="btn btn-danger btn-sm" data-id="{{ matrix.id }}" onclick="confirmDelete(this.dataset.id)">
+                                        <i class="fas fa-trash"></i> 删除
+                                    </button>
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="6" class="text-center py-5">
+                                    <i class="fas fa-database fa-5x text-gray-300 mb-3"></i>
+                                    <h4 class="text-gray-500">暂无权重数据</h4>
+                                    <p class="text-gray-400">请先使用AHP判断矩阵构建功能生成权重数据</p>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function confirmDelete(matrixId) {
+    if (confirm('确定要删除这条AHP权重记录吗？删除后无法恢复。')) {
+        fetch('/evaluation/ahp/weights/delete/' + matrixId + '/', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('删除成功');
+                location.reload();
+            } else {
+                alert('删除失败：' + (data.message || '未知错误'));
+            }
+        })
+        .catch(error => {
+            alert('删除失败：' + error);
+        });
+    }
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>
+{% endblock %}

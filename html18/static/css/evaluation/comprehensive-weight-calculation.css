@@ -1,0 +1,68 @@
+#machine-select,
+#alpha-input {
+    height: 48px !important;
+    font-size: 1.25rem !important;
+    padding: 0.5rem 1rem !important;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: #4e73df;
+    box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.25);
+}
+
+.btn:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+}
+
+.table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.card-header {
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.card-header:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+}
+
+.spinner-border {
+    animation: spinner-border 0.75s linear infinite;
+}
+
+@keyframes spinner-border {
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+.alert {
+    border-radius: 0.5rem;
+}
+
+.table-primary {
+    background-color: #cfe2ff !important;
+}
+
+.table-success {
+    background-color: #d1e7dd !important;
+}
+
+@media (max-width: 768px) {
+    .btn-lg {
+        padding: 0.5rem 1rem;
+        font-size: 1rem;
+    }
+    
+    .display-4 {
+        font-size: 2.5rem;
+    }
+    
+    .table {
+        font-size: 0.875rem;
+    }
+}

@@ -1,0 +1,911 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+{% load static %}
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}高端数控机床质量分级评价软件{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
+    <link rel="stylesheet" href="{% static 'css/fontawesome.min.css' %}">
+    <script src="{% static 'js/jquery-3.6.4.min.js' %}"></script>
+    <script>
+        // 用户作用域的 localStorage 封装
+        // 自动给所有键添加当前用户ID前缀，实现多用户数据隔离
+        (function() {
+            const CURRENT_USER_ID = '{{ user.id }}';
+            // 未登录用户使用匿名前缀，避免污染已登录用户的数据
+            const USER_PREFIX = CURRENT_USER_ID ? ('user_' + CURRENT_USER_ID + '_') : 'anonymous_';
+
+            // 全局共享键（不添加用户前缀），允差数据等所有用户共享
+            const GLOBAL_KEYS = [
+                'toleranceData_machining_center',
+                'toleranceData_boring_milling_machine',
+                'tolerance_cache_timestamp'
+            ];
+
+            function isGlobalKey(key) {
+                return GLOBAL_KEYS.indexOf(key) !== -1;
+            }
+
+            function getUserKey(key) {
+                if (isGlobalKey(key)) return key;
+                return USER_PREFIX + key;
+            }
+
+            // 保存原始方法
+            const _originalGetItem = Storage.prototype.getItem;
+            const _originalSetItem = Storage.prototype.setItem;
+            const _originalRemoveItem = Storage.prototype.removeItem;
+            const _originalClear = Storage.prototype.clear;
+            const _originalKey = Storage.prototype.key;
+
+            // 覆盖方法
+            Storage.prototype.getItem = function(key) {
+                return _originalGetItem.call(this, getUserKey(key));
+            };
+
+            Storage.prototype.setItem = function(key, value) {
+                return _originalSetItem.call(this, getUserKey(key), value);
+            };
+
+            Storage.prototype.removeItem = function(key) {
+                return _originalRemoveItem.call(this, getUserKey(key));
+            };
+
+            Storage.prototype.clear = function() {
+                // 只清除当前用户的数据，不清除全局数据和其他用户的数据
+                const keysToRemove = [];
+                for (let i = 0; i < this.length; i++) {
+                    const rawKey = _originalKey.call(this, i);
+                    if (rawKey && rawKey.indexOf(USER_PREFIX) === 0) {
+                        keysToRemove.push(rawKey);
+                    }
+                }
+                keysToRemove.forEach(function(k) {
+                    _originalRemoveItem.call(localStorage, k);
+                });
+            };
+
+            // key() 方法：返回去掉用户前缀后的键名
+            Storage.prototype.key = function(index) {
+                // 计算用户作用域内的索引
+                let userIndex = 0;
+                for (let i = 0; i < this.length; i++) {
+                    const rawKey = _originalKey.call(this, i);
+                    if (rawKey && (rawKey.indexOf(USER_PREFIX) === 0 || isGlobalKey(rawKey))) {
+                        if (userIndex === index) {
+                            // 去掉用户前缀返回
+                            if (rawKey.indexOf(USER_PREFIX) === 0) {
+                                return rawKey.substring(USER_PREFIX.length);
+                            }
+                            return rawKey;
+                        }
+                        userIndex++;
+                    }
+                }
+                return null;
+            };
+
+            // 暴露给全局，方便调试
+            window.__USER_PREFIX = USER_PREFIX;
+            window.__CURRENT_USER_ID = CURRENT_USER_ID;
+
+            // 数据迁移：将旧的无前缀数据迁移到当前用户前缀下
+            // 只在用户已登录时执行，且只执行一次
+            if (CURRENT_USER_ID) {
+                const MIGRATION_KEY = '__ls_migrated_' + CURRENT_USER_ID;
+                if (!_originalGetItem.call(localStorage, MIGRATION_KEY)) {
+                    const keysToMigrate = [];
+                    for (let i = 0; i < localStorage.length; i++) {
+                        const rawKey = _originalKey.call(localStorage, i);
+                        // 跳过已有前缀的键、全局键、迁移标记键
+                        if (!rawKey || rawKey.indexOf('user_') === 0 || rawKey.indexOf('anonymous_') === 0 || isGlobalKey(rawKey) || rawKey.indexOf('__ls_migrated_') === 0) {
+                            continue;
+                        }
+                        keysToMigrate.push(rawKey);
+                    }
+                    keysToMigrate.forEach(function(oldKey) {
+                        const value = _originalGetItem.call(localStorage, oldKey);
+                        if (value !== null) {
+                            _originalSetItem.call(localStorage, USER_PREFIX + oldKey, value);
+                            _originalRemoveItem.call(localStorage, oldKey);
+                        }
+                    });
+                    _originalSetItem.call(localStorage, MIGRATION_KEY, '1');
+                    if (keysToMigrate.length > 0) {
+                        console.log('[LocalStorage] 已迁移 ' + keysToMigrate.length + ' 条数据到用户 ' + CURRENT_USER_ID + ' 的命名空间');
+                    }
+                }
+            }
+        })();
+    </script>
+    <script>
+        function loadXLSX() {
+            return new Promise((resolve, reject) => {
+                if (window.XLSX) {
+                    resolve(window.XLSX);
+                    return;
+                }
+                const script = document.createElement('script');
+                script.src = 'https://cdn.bootcdn.net/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+                script.onload = () => resolve(window.XLSX);
+                script.onerror = reject;
+                document.head.appendChild(script);
+            });
+        }
+    </script>
+    <link rel="stylesheet" href="{% static 'css/main.css' %}?v=1.0.3">
+    {% block extra_css %}
+<style>
+    .nav-link.active {
+        color: white !important;
+    }
+    .dropdown-item.active {
+        color: white !important;
+        background-color: #0d6efd;
+    }
+</style>
+{% endblock %}
+</head>
+<body>
+    {% block header %}
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary" style="position: fixed; top: 0; left: 0; right: 0; z-index: 10000;">
+        <div class="container-fluid">
+            <span class="navbar-brand" style="font-size: 1.25rem;">
+                <i class="fas fa-industry"></i> 高端数控机床质量分级评价软件
+            </span>
+            {% if user.is_authenticated %}
+            <div class="collapse navbar-collapse">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.path == '/evaluation/' %}active{% endif %}" href="{% url 'evaluation_dashboard' %}">首页</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.path == '/data/machines/' %}active{% endif %}" href="{% url 'machine_list' %}">机床管理</a>
+                    </li>
+                    {% if user.userprofile and user.userprofile.is_admin %}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle {% if request.path == '/evaluation/wizard/' or request.path == '/evaluation/run_pro/' or request.path == '/evaluation/run_user/' or request.path == '/evaluation/ahp/matrix/' or request.path == '/evaluation/entropy/' or request.path == '/evaluation/comprehensive-weight/' or request.path == '/evaluation/history/' or request.path == '/evaluation/tolerance-management/' %}active{% endif %}" href="#" id="evaluationDropdown" role="button" data-bs-toggle="dropdown">
+                            质量评价
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item {% if request.path == '/evaluation/wizard/' %}active{% endif %}" href="{% url 'evaluation_wizard' %}">评价向导</a></li>
+                            <li><a class="dropdown-item {% if request.path == '/evaluation/run_pro/' %}active{% endif %}" href="{% url 'run_evaluation_pro' %}">专家评价</a></li>
+                            <li><a class="dropdown-item {% if request.path == '/evaluation/run_user/' %}active{% endif %}" href="#" id="nav-entropy-calc">信息熵计算</a></li>
+                            <li><a class="dropdown-item {% if request.path == '/evaluation/ahp/weights/' %}active{% endif %}" href="{% url 'ahp_weight_management' %}">AHP权重管理</a></li>
+                            <li><a class="dropdown-item {% if request.path == '/evaluation/comprehensive-weight/' %}active{% endif %}" href="{% url 'comprehensive_weight_calculation' %}">精度分数计算</a></li>
+                            <li><a class="dropdown-item {% if request.path == '/evaluation/tolerance-management/' %}active{% endif %}" href="{% url 'tolerance_management' %}">允差管理</a></li>
+                        </ul>
+                    </li>
+                    {% else %}
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.path == '/evaluation/wizard/' %}active{% endif %}" href="{% url 'evaluation_wizard' %}">评价向导</a>
+                    </li>
+                    {% endif %}
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.path == '/reports/' %}active{% endif %}" href="{% url 'report_list' %}">报告中心</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.path == '/visualization/' %}active{% endif %}" href="{% url 'visualization_dashboard' %}">可视化分析</a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-user"></i> {{ user.username }}
+                            {% if user.userprofile %}
+                                <span class="badge bg-secondary ms-1">{{ user.userprofile.get_role_display }}</span>
+                            {% endif %}
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="{% url 'profile' %}">个人资料</a></li>
+                            {% if user.userprofile and user.userprofile.is_admin %}
+                            <li><a class="dropdown-item" href="{% url 'admin_key_management' %}">管理员密钥管理</a></li>
+                            {% endif %}
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <form method="post" action="{% url 'logout' %}" class="d-inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="dropdown-item border-0 bg-transparent w-100 text-start">退出登录</button>
+                                </form>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+            {% endif %}
+        </div>
+    </nav>
+    {% endblock %}
+    <main class="container mt-4">
+        {% if messages %}
+        <div class="messages mb-4">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show font-weight-bold border-2 border-danger" role="alert" style="padding: 1rem; font-size: 1.1rem; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+                <div class="d-flex align-items-center">
+                    {% if message.tags == 'error' %}
+                    <i class="fas fa-exclamation-circle text-danger mr-3" style="font-size: 1.5rem;"></i>
+                    {% elif message.tags == 'success' %}
+                    <i class="fas fa-check-circle text-success mr-3" style="font-size: 1.5rem;"></i>
+                    {% elif message.tags == 'warning' %}
+                    <i class="fas fa-exclamation-triangle text-warning mr-3" style="font-size: 1.5rem;"></i>
+                    {% else %}
+                    <i class="fas fa-info-circle text-info mr-3" style="font-size: 1.5rem;"></i>
+                    {% endif %}
+                    <div>{{ message }}</div>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% block content %}
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">欢迎使用质量评价系统</h5>
+                <p class="card-text">基于AHP与信息熵组合赋权方法的数控机床质量分级评价软件。</p>
+            </div>
+        </div>
+        {% endblock %}
+    </main>
+    {% block footer %}
+    <footer class="footer bg-light py-3" style="position: fixed; bottom: 0; width: 100%; z-index: 999;">
+        <div class="container text-center">
+            <span class="text-muted">高端数控机床质量分级评价软件 &copy; 2026</span>
+        </div>
+    </footer>
+    {% endblock %}
+    <script>
+        function loadLocalJQuery() {
+            console.log('加载本地jQuery');
+            const script = document.createElement('script');
+            script.src = '{% static "js/jquery.min.js" %}';
+            document.head.appendChild(script);
+        }
+        function preloadCriticalResources() {
+            const criticalResources = [
+                '{% static "css/main.css" %}?v=1.0.3',
+                '{% static "js/main.js" %}'
+            ];
+            criticalResources.forEach(resource => {
+                const link = document.createElement('link');
+                link.rel = 'preload';
+                link.href = resource;
+                link.as = resource.endsWith('.css') ? 'style' : 'script';
+                document.head.appendChild(link);
+            });
+        }
+        document.addEventListener('DOMContentLoaded', function() {
+            preloadCriticalResources();
+            setTimeout(() => {
+            }, 1000);
+        });
+    </script>
+    <script>
+        function loadBootstrap() {
+            const localUrl = '{% static "js/bootstrap.bundle.min.js" %}';
+            console.log('加载Bootstrap:', localUrl);
+            const script = document.createElement('script');
+            script.src = localUrl;
+            script.onload = function() {
+                console.log('Bootstrap加载成功');
+            };
+            script.onerror = function() {
+                console.warn('本地Bootstrap加载失败，尝试CDN');
+                loadCdnBootstrap();
+            };
+            document.head.appendChild(script);
+        }
+        function loadCdnBootstrap() {
+            const cdnUrls = [
+                'https://cdn.bootcdn.net/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js',
+                'https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js',
+                'https://unpkg.com/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js',
+                'https://cdn.staticfile.org/bootstrap/5.3.0/js/bootstrap.bundle.min.js'
+            ];
+            let currentUrlIndex = 0;
+            function tryLoadNextCdn() {
+                if (currentUrlIndex >= cdnUrls.length) {
+                    console.error('Bootstrap加载失败');
+                    return;
+                }
+                const cdnUrl = cdnUrls[currentUrlIndex];
+                console.log('尝试CDN:', cdnUrl);
+                const script = document.createElement('script');
+                script.src = cdnUrl;
+                const timeoutId = setTimeout(() => {
+                    currentUrlIndex++;
+                    tryLoadNextCdn();
+                }, 3000);
+                script.onload = function() {
+                    clearTimeout(timeoutId);
+                    console.log('Bootstrap CDN加载成功');
+                };
+                script.onerror = function() {
+                    clearTimeout(timeoutId);
+                    currentUrlIndex++;
+                    tryLoadNextCdn();
+                };
+                document.head.appendChild(script);
+            }
+            tryLoadNextCdn();
+        }
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', loadBootstrap);
+        } else {
+            loadBootstrap();
+        }
+    </script>
+    <script src="{% static 'js/main.js' %}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var dropdownToggle = document.getElementById('evaluationDropdown');
+            if (dropdownToggle) {
+                var dropdownElement = dropdownToggle.closest('.nav-item.dropdown');
+                var dropdownMenu = dropdownElement.querySelector('.dropdown-menu');
+                dropdownElement.addEventListener('mouseenter', function() {
+                    dropdownMenu.classList.add('show');
+                });
+                dropdownElement.addEventListener('mouseleave', function() {
+                    dropdownMenu.classList.remove('show');
+                });
+            }
+        });
+    </script>
+    <script>
+    function clearPrecisionModuleData() {
+        // 位置精度相关
+        localStorage.removeItem('position_accuracy_saved');
+        localStorage.removeItem('position_accuracy_score');
+        
+        // 几何精度相关
+        localStorage.removeItem('geometry_accuracy_saved');
+        localStorage.removeItem('geometry_accuracy_score');
+        
+        // 工件精度相关
+        localStorage.removeItem('workpiece_accuracy_saved');
+        localStorage.removeItem('workpiece_accuracy_score');
+        
+        // 精度评分汇总相关
+        localStorage.removeItem('precision_summary_saved');
+        localStorage.removeItem('precision_summary_total');
+        
+        // 机床特定数据
+        localStorage.removeItem('previous_machine_id');
+    }
+    
+    function clearPerformanceModuleData() {
+        localStorage.removeItem('加工分散性_score');
+        localStorage.removeItem('cp_value');
+        localStorage.removeItem('加工分散性_cp');
+        localStorage.removeItem('加工效率_score');
+        localStorage.removeItem('overallEfficiencyResult');
+        localStorage.removeItem('静刚度_score');
+        localStorage.removeItem('staticStiffnessResult');
+        localStorage.removeItem('主轴_score');
+        localStorage.removeItem('主轴_data');
+        localStorage.removeItem('噪声_score');
+        localStorage.removeItem('噪声_data');
+        localStorage.removeItem('noiseMachineType');
+        localStorage.removeItem('noiseWeight');
+        localStorage.removeItem('电流稳定性_score');
+        localStorage.removeItem('电流稳定性_data');
+        localStorage.removeItem('current_stability_score');
+        localStorage.removeItem('主轴温升热变形_score');
+        localStorage.removeItem('主轴温升热变形_data');
+        localStorage.removeItem('thermal_deformation_score');
+        localStorage.removeItem('主轴负载能力_score');
+        localStorage.removeItem('主轴负载能力_data');
+        localStorage.removeItem('spindle_load_score');
+        localStorage.removeItem('最大工件负重_score');
+        localStorage.removeItem('最大工件负重_data');
+        localStorage.removeItem('max_load_score');
+        localStorage.removeItem('切削抗振性_score');
+        localStorage.removeItem('切削抗振性_data');
+        localStorage.removeItem('vibration_resistance_score');
+        localStorage.removeItem('machineType');
+        localStorage.removeItem('evaluationScheme');
+        localStorage.removeItem('peakSpeed');
+        localStorage.removeItem('valleySpeed');
+        localStorage.removeItem('designMaxSpeed');
+        localStorage.removeItem('maxFastSpeed');
+        localStorage.removeItem('designMaxFastSpeed');
+        localStorage.removeItem('repeatPositioningAccuracy');
+        localStorage.removeItem('maxFeedSpeed');
+        localStorage.removeItem('targetMaxSpeed');
+        localStorage.removeItem('repeatPositioningAccuracyFeed');
+        localStorage.removeItem('radialStiffness');
+        localStorage.removeItem('axialStiffness');
+        localStorage.removeItem('cuttingStiffness');
+        localStorage.removeItem('staticStiffnessAccept');
+        localStorage.removeItem('staticStiffness');
+        localStorage.removeItem('maxVibrationSpeed');
+        localStorage.removeItem('noiseValue');
+        localStorage.removeItem('initialPower');
+        localStorage.removeItem('finalPower');
+        localStorage.removeItem('currentUnbalance');
+        localStorage.removeItem('currentFluctuation');
+        localStorage.removeItem('voltageFluctuation');
+        localStorage.removeItem('frequencyFluctuation');
+        localStorage.removeItem('radialThermalDisplacement');
+        localStorage.removeItem('radialThermalGradient');
+        localStorage.removeItem('axialThermalDisplacement');
+        localStorage.removeItem('axialThermalGradient');
+        localStorage.removeItem('measuredMaxPower');
+        localStorage.removeItem('designMaxPower');
+        localStorage.removeItem('cuttingVibrationSpeed1');
+        localStorage.removeItem('measuredMaxTorque');
+        localStorage.removeItem('designMaxTorque');
+        localStorage.removeItem('cuttingVibrationSpeed2');
+        localStorage.removeItem('actualLoadWeight');
+        localStorage.removeItem('maxDesignWeight');
+        localStorage.removeItem('actualLoadVelocity');
+        localStorage.removeItem('maxDesignVelocity');
+        localStorage.removeItem('cuttingVibrationSpeed3');
+        localStorage.removeItem('cuttingVibrationSpeed4');
+        localStorage.removeItem('perf_summary_saved');
+        localStorage.removeItem('perf_summary_total_score');
+        localStorage.removeItem('perf_summary_dispersion_score');
+        localStorage.removeItem('perf_summary_dispersion_weighted');
+        localStorage.removeItem('perf_summary_efficiency_score');
+        localStorage.removeItem('perf_summary_efficiency_weighted');
+        localStorage.removeItem('perf_summary_static_stiffness_score');
+        localStorage.removeItem('perf_summary_static_stiffness_weighted');
+        localStorage.removeItem('perf_summary_spindle_score');
+        localStorage.removeItem('perf_summary_spindle_weighted');
+        localStorage.removeItem('perf_summary_noise_score');
+        localStorage.removeItem('perf_summary_noise_weighted');
+        localStorage.removeItem('perf_summary_current_stability_score');
+        localStorage.removeItem('perf_summary_current_stability_weighted');
+        localStorage.removeItem('perf_summary_thermal_deformation_score');
+        localStorage.removeItem('perf_summary_thermal_deformation_weighted');
+        localStorage.removeItem('perf_summary_spindle_load_score');
+        localStorage.removeItem('perf_summary_spindle_load_weighted');
+        localStorage.removeItem('perf_summary_max_load_score');
+        localStorage.removeItem('perf_summary_max_load_weighted');
+        localStorage.removeItem('perf_summary_vibration_resistance_score');
+        localStorage.removeItem('perf_summary_vibration_resistance_weighted');
+        localStorage.removeItem('perf_section_machining_weight');
+        localStorage.removeItem('perf_section_machining_total');
+        localStorage.removeItem('perf_section_stiffness_weight');
+        localStorage.removeItem('perf_section_stiffness_total');
+        localStorage.removeItem('perf_section_operation_weight');
+        localStorage.removeItem('perf_section_operation_total');
+        localStorage.removeItem('perf_section_load_weight');
+        localStorage.removeItem('perf_section_load_total');
+        localStorage.removeItem('perf_sub_items_completed');
+        localStorage.removeItem('performance_total_score');
+    }
+
+    function clearReliabilityModuleData() {
+        // MTBF相关
+        localStorage.removeItem('mtbf_totalRunTime');
+        localStorage.removeItem('mtbf_faultCount');
+        localStorage.removeItem('mtbf_score');
+        localStorage.removeItem('mtbf_calculated');
+        localStorage.removeItem('mtbf_summary_score');
+        
+        // MTTR相关
+        localStorage.removeItem('mttr_repairCount');
+        localStorage.removeItem('mttr_repairTimes');
+        localStorage.removeItem('mttr_score');
+        localStorage.removeItem('mttr_calculated');
+        localStorage.removeItem('mttr_summary_score');
+        
+        // 整机可用度相关
+        localStorage.removeItem('availability_mtbf');
+        localStorage.removeItem('availability_mttr');
+        localStorage.removeItem('availability_score');
+        localStorage.removeItem('availability_calculated');
+        localStorage.removeItem('availability_summary_score');
+        
+        // 当量故障率相关
+        localStorage.removeItem('failure_rate_fatalFailure');
+        localStorage.removeItem('failure_rate_seriousFailure');
+        localStorage.removeItem('failure_rate_generalFailure');
+        localStorage.removeItem('failure_rate_operationTime');
+        localStorage.removeItem('failure_rate_score');
+        localStorage.removeItem('failure_rate_neCalculated');
+        localStorage.removeItem('failure_rate_calculated');
+        localStorage.removeItem('failure_rate_summary_score');
+        
+        // 加工一致性相关
+        localStorage.removeItem('consistency_sigma');
+        localStorage.removeItem('consistency_mu');
+        localStorage.removeItem('consistency_score');
+        localStorage.removeItem('consistency_calculated');
+        localStorage.removeItem('consistency_summary_score');
+        
+        // 加工精度保持性相关
+        localStorage.removeItem('precision_originalPrecision');
+        localStorage.removeItem('precision_failurePrecision');
+        localStorage.removeItem('precision_initialPrecision');
+        localStorage.removeItem('precision_score');
+        localStorage.removeItem('precision_calculated');
+        localStorage.removeItem('precision_summary_score');
+        
+        // MTTF相关
+        localStorage.removeItem('mttf_failureCount');
+        localStorage.removeItem('mttf_failureTimes');
+        localStorage.removeItem('mttf_score');
+        localStorage.removeItem('mttf_calculated');
+        localStorage.removeItem('mttf_summary_score');
+        
+        // 可靠性评分汇总相关
+        localStorage.removeItem('summary_total_score');
+        localStorage.removeItem('reliability_summary_saved');
+        localStorage.removeItem('summary_evaluation_level');
+        
+        // 机床参数数据
+        localStorage.removeItem('machineIdToParams');
+        localStorage.removeItem('selectedMachineId');
+        localStorage.removeItem('selectedMachineType');
+        
+        // ==================== 重置可靠性部分评分汇总的输入框 ====================
+        
+        var totalSummaryScore = document.getElementById('total-summary-score');
+        var evaluationLevel = document.getElementById('evaluation-level');
+        
+        if (totalSummaryScore) {
+            totalSummaryScore.value = '待计算';
+            totalSummaryScore.style.color = 'gray';
+        }
+        if (evaluationLevel) {
+            evaluationLevel.value = '';
+        }
+    }
+    
+    function clearIntelligenceModuleData() {
+        // 智能化模块checkbox状态
+        localStorage.removeItem('intelligenceCheckboxStates');
+        
+        // 智能化模块得分和等级
+        localStorage.removeItem('intelligence_score');
+        localStorage.removeItem('intelligence_level');
+    }
+    
+    function clearGreenModuleData() {
+        // 切削液消耗相关
+        localStorage.removeItem('切削液消耗_Q');
+        localStorage.removeItem('切削液消耗_P');
+        localStorage.removeItem('切削液消耗_q');
+        localStorage.removeItem('切削液消耗_score');
+        localStorage.removeItem('切削液_score');
+        localStorage.removeItem('cuttingFluidQ');
+        localStorage.removeItem('cuttingFluidP');
+        localStorage.removeItem('cuttingFluidConsumption');
+        localStorage.removeItem('cuttingFluidScore');
+        
+        // 润滑油消耗相关
+        localStorage.removeItem('润滑油消耗_score');
+        localStorage.removeItem('润滑油消耗_L');
+        localStorage.removeItem('润滑油消耗_P');
+        localStorage.removeItem('润滑油消耗_x');
+        localStorage.removeItem('润滑油消耗_I');
+        localStorage.removeItem('lubricantL');
+        localStorage.removeItem('lubricantP');
+        localStorage.removeItem('lubricantX');
+        localStorage.removeItem('lubricantConsumption');
+        localStorage.removeItem('lubricantScore');
+        
+        // 轻量化设计相关
+        localStorage.removeItem('轻量化设计_scores');
+        localStorage.removeItem('轻量化设计_total');
+        localStorage.removeItem('轻量化设计_saved');
+        localStorage.removeItem('轻量化设计_score');
+        localStorage.removeItem('lightweightItems');
+        localStorage.removeItem('lightweightRatio');
+        localStorage.removeItem('lightweightScore');
+        localStorage.removeItem('lightweight-struct-1');
+        localStorage.removeItem('lightweight-struct-2');
+        localStorage.removeItem('lightweight-struct-3');
+        localStorage.removeItem('lightweight-material-1');
+        localStorage.removeItem('lightweight-material-2');
+        localStorage.removeItem('lightweight-process-1');
+        localStorage.removeItem('lightweight-process-2');
+        localStorage.removeItem('lightweight-simulation');
+        
+        // 有效能量利用率相关
+        localStorage.removeItem('有效能量利用率_score');
+        localStorage.removeItem('有效能量利用率_eta');
+        
+        // 待机能耗率相关
+        localStorage.removeItem('待机能耗率_score');
+        localStorage.removeItem('待机能耗率_lambda');
+        
+        // 空运转能耗率相关
+        localStorage.removeItem('空运转能耗率_score');
+        localStorage.removeItem('空运转能耗率_lambda');
+        
+        // 参数预设相关
+        localStorage.removeItem('参数预设_Est');
+        localStorage.removeItem('参数预设_Eu');
+        localStorage.removeItem('参数预设_Ec');
+        localStorage.removeItem('参数预设_n');
+        localStorage.removeItem('参数预设_v');
+        localStorage.removeItem('参数预设_Emr');
+        localStorage.removeItem('参数预设_Et');
+        localStorage.removeItem('参数预设_saved');
+        localStorage.removeItem('estValue');
+        localStorage.removeItem('euValue');
+        localStorage.removeItem('ecValue');
+        localStorage.removeItem('nValue');
+        localStorage.removeItem('vValue');
+        
+        // 工件比能相关
+        localStorage.removeItem('工件比能_score');
+        localStorage.removeItem('工件比能_sn');
+        
+        // 体积比能相关
+        localStorage.removeItem('体积比能_score');
+        localStorage.removeItem('体积比能_sv');
+        
+        // 切削能耗率相关
+        localStorage.removeItem('切削能耗率_score');
+        localStorage.removeItem('切削能耗率_gamma');
+        
+        // 切削能量能耗率相关
+        localStorage.removeItem('切削能量能耗率_score');
+        localStorage.removeItem('切削能量能耗率_u');
+        
+        // 绿色化评分汇总相关
+        localStorage.removeItem('green_summary_saved');
+        localStorage.removeItem('green_summary_total_score');
+        localStorage.removeItem('green_summary_energy_score');
+        localStorage.removeItem('green_summary_energy_weighted');
+        localStorage.removeItem('green_summary_workpiece_score');
+        localStorage.removeItem('green_summary_workpiece_weighted');
+        localStorage.removeItem('green_summary_volume_score');
+        localStorage.removeItem('green_summary_volume_weighted');
+        localStorage.removeItem('green_summary_standby_score');
+        localStorage.removeItem('green_summary_standby_weighted');
+        localStorage.removeItem('green_summary_idle_score');
+        localStorage.removeItem('green_summary_idle_weighted');
+        localStorage.removeItem('green_summary_cutting_weighted');
+        localStorage.removeItem('green_summary_cutting_energy_weighted');
+        localStorage.removeItem('green_summary_cutting_score');
+        localStorage.removeItem('green_summary_cutting_energy_score');
+        
+        // ==================== 重置绿色化部分能源-能效标签下的子界面输入框 ====================
+        
+        // 参数预设
+        var presetEst = document.getElementById('preset-est');
+        var presetEu = document.getElementById('preset-eu');
+        var presetEc = document.getElementById('preset-ec');
+        var presetN = document.getElementById('preset-n');
+        var presetV = document.getElementById('preset-v');
+        var presetEmr = document.getElementById('preset-emr');
+        var presetEt = document.getElementById('preset-et');
+        
+        if (presetEst) presetEst.value = '';
+        if (presetEu) presetEu.value = '';
+        if (presetEc) presetEc.value = '';
+        if (presetN) presetN.value = '';
+        if (presetV) presetV.value = '';
+        if (presetEmr) {
+            presetEmr.value = '待计算';
+            presetEmr.style.color = 'gray';
+        }
+        if (presetEt) {
+            presetEt.value = '待计算';
+            presetEt.style.color = 'gray';
+        }
+        
+        // 有效能量利用率
+        var energyEmr = document.getElementById('energy-emr');
+        var energyEt = document.getElementById('energy-et');
+        var energyEfficiencyEta = document.getElementById('energy-efficiency-eta');
+        var energyEfficiencyScore = document.getElementById('energy-efficiency-score');
+        
+        if (energyEmr) energyEmr.value = '';
+        if (energyEt) energyEt.value = '';
+        if (energyEfficiencyEta) {
+            energyEfficiencyEta.value = '待计算';
+            energyEfficiencyEta.style.color = 'gray';
+        }
+        if (energyEfficiencyScore) {
+            energyEfficiencyScore.value = '待计算';
+            energyEfficiencyScore.style.color = 'gray';
+        }
+        
+        // 待机能耗率
+        var standbyEst = document.getElementById('standby-est');
+        var standbyEt = document.getElementById('standby-et');
+        var standbyLambda = document.getElementById('standby-lambda');
+        var standbyScore = document.getElementById('standby-score');
+        
+        if (standbyEst) standbyEst.value = '';
+        if (standbyEt) standbyEt.value = '';
+        if (standbyLambda) {
+            standbyLambda.value = '待计算';
+            standbyLambda.style.color = 'gray';
+        }
+        if (standbyScore) {
+            standbyScore.value = '待计算';
+            standbyScore.style.color = 'gray';
+        }
+        
+        // 空运转能耗率
+        var idleEu = document.getElementById('idle-eu');
+        var idleEt = document.getElementById('idle-et');
+        var idleLambda = document.getElementById('idle-lambda');
+        var idleScore = document.getElementById('idle-score');
+        
+        if (idleEu) idleEu.value = '';
+        if (idleEt) idleEt.value = '';
+        if (idleLambda) {
+            idleLambda.value = '待计算';
+            idleLambda.style.color = 'gray';
+        }
+        if (idleScore) {
+            idleScore.value = '待计算';
+            idleScore.style.color = 'gray';
+        }
+        
+        // 工件比能
+        var workpieceEt = document.getElementById('workpiece-et');
+        var workpieceN = document.getElementById('workpiece-n');
+        var workpieceSn = document.getElementById('workpiece-sn');
+        var workpieceScore = document.getElementById('workpiece-score');
+        
+        if (workpieceEt) workpieceEt.value = '';
+        if (workpieceN) workpieceN.value = '';
+        if (workpieceSn) {
+            workpieceSn.value = '待计算';
+            workpieceSn.style.color = 'gray';
+        }
+        if (workpieceScore) {
+            workpieceScore.value = '待计算';
+            workpieceScore.style.color = 'gray';
+        }
+        
+        // 体积比能
+        var volumeEt = document.getElementById('volume-et');
+        var volumeV = document.getElementById('volume-v');
+        var volumeSv = document.getElementById('volume-sv');
+        var volumeScore = document.getElementById('volume-score');
+        
+        if (volumeEt) volumeEt.value = '';
+        if (volumeV) volumeV.value = '';
+        if (volumeSv) {
+            volumeSv.value = '待计算';
+            volumeSv.style.color = 'gray';
+        }
+        if (volumeScore) {
+            volumeScore.value = '待计算';
+            volumeScore.style.color = 'gray';
+        }
+        
+        // 切削能耗率
+        var cuttingEc = document.getElementById('cutting-ec');
+        var cuttingEt = document.getElementById('cutting-et');
+        var cuttingGamma = document.getElementById('cutting-gamma');
+        var cuttingScore = document.getElementById('cutting-score');
+        
+        if (cuttingEc) cuttingEc.value = '';
+        if (cuttingEt) cuttingEt.value = '';
+        if (cuttingGamma) {
+            cuttingGamma.value = '待计算';
+            cuttingGamma.style.color = 'gray';
+        }
+        if (cuttingScore) {
+            cuttingScore.value = '待计算';
+            cuttingScore.style.color = 'gray';
+        }
+        
+        // 切削能量能耗率
+        var cuttingEnergyEmr = document.getElementById('cutting-energy-emr');
+        var cuttingEnergyEc = document.getElementById('cutting-energy-ec');
+        var cuttingEnergyU = document.getElementById('cutting-energy-u');
+        var cuttingEnergyScore = document.getElementById('cutting-energy-score');
+        
+        if (cuttingEnergyEmr) cuttingEnergyEmr.value = '';
+        if (cuttingEnergyEc) cuttingEnergyEc.value = '';
+        if (cuttingEnergyU) {
+            cuttingEnergyU.value = '待计算';
+            cuttingEnergyU.style.color = 'gray';
+        }
+        if (cuttingEnergyScore) {
+            cuttingEnergyScore.value = '待计算';
+            cuttingEnergyScore.style.color = 'gray';
+        }
+    }
+    document.addEventListener('DOMContentLoaded', function() {
+        const logoutForm = document.querySelector("form[action*='logout']");
+        if (logoutForm) {
+            logoutForm.addEventListener('submit', function(e) {
+                clearPrecisionModuleData();
+                clearPerformanceModuleData();
+                clearReliabilityModuleData();
+                clearIntelligenceModuleData();
+                clearGreenModuleData();
+            });
+        }
+    });
+    </script>
+
+    <script>
+    // 导航栏信息熵计算按钮点击事件
+    document.addEventListener('DOMContentLoaded', function() {
+        const navEntropyCalc = document.getElementById('nav-entropy-calc');
+        if (navEntropyCalc) {
+            navEntropyCalc.addEventListener('click', function(e) {
+                e.preventDefault();
+                showMachineTypeSelectionModal();
+            });
+        }
+    });
+
+    function showMachineTypeSelectionModal() {
+        const modalHtml = `
+            <div id="machine-type-modal" class="modal" style="display: flex; position: fixed; z-index: 1060; left: 0; top: 0; width: 100%; height: 100%; overflow: hidden; background-color: rgba(0,0,0,0.5); justify-content: center; align-items: center;">
+                <div class="modal-dialog modal-dialog-centered" style="width: 90%; max-width: 500px;">
+                    <div class="modal-content" style="border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.3);">
+                        <div class="modal-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 10px 10px 0 0; padding: 20px;">
+                            <h5 class="modal-title" style="font-size: 1.3rem; font-weight: bold;">
+                                <i class="fas fa-cogs mr-2"></i>选择机床类型
+                            </h5>
+                            <button type="button" class="close" onclick="closeMachineTypeModal()" style="color: white; opacity: 1; font-size: 28px; font-weight: bold; background: none; border: none; cursor: pointer;">&times;</button>
+                        </div>
+                        <div class="modal-body" style="padding: 30px;">
+                            <p style="text-align: center; margin-bottom: 25px; color: #666; font-size: 1.1rem;">请选择要进行信息熵计算的机床类型：</p>
+                            <div class="d-flex flex-column gap-3">
+                                <button type="button" class="btn btn-outline-primary btn-lg machine-type-option" data-machine-type="machining_center" style="padding: 20px; font-size: 1.1rem; border-width: 2px; transition: all 0.3s;">
+                                    <i class="fas fa-arrows-alt-h mr-2"></i>加工中心
+                                </button>
+                                <button type="button" class="btn btn-outline-success btn-lg machine-type-option" data-machine-type="boring_milling_machine" style="padding: 20px; font-size: 1.1rem; border-width: 2px; transition: all 0.3s;">
+                                    <i class="fas fa-cube mr-2"></i>镗铣床
+                                </button>
+                            </div>
+                        </div>
+                        <div class="modal-footer" style="border-top: 1px solid #dee2e6; padding: 15px 30px;">
+                            <button type="button" class="btn btn-secondary" onclick="closeMachineTypeModal()" style="padding: 10px 30px;">取消</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+        
+        document.querySelectorAll('.machine-type-option').forEach(button => {
+            button.addEventListener('click', function() {
+                const machineType = this.getAttribute('data-machine-type');
+                closeMachineTypeModal();
+                navigateToEntropyCalculation(machineType);
+            });
+            
+            button.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-2px)';
+                this.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+            });
+            
+            button.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(0)';
+                this.style.boxShadow = 'none';
+            });
+        });
+    }
+
+    function closeMachineTypeModal() {
+        const modal = document.getElementById('machine-type-modal');
+        if (modal) {
+            modal.remove();
+        }
+    }
+
+    function navigateToEntropyCalculation(machineType) {
+        console.log('选择机床类型:', machineType);
+        localStorage.setItem('selectedMachineType', machineType);
+        if (machineType === 'machining_center') {
+            window.location.href = '/evaluation/run_user/?machine_type=machining_center';
+        } else if (machineType === 'boring_milling_machine') {
+            window.location.href = '/evaluation/run_user/?machine_type=boring_milling_machine';
+        }
+    }
+    </script>
+
+    {% block extra_js %}{% endblock %}
+    <script src="{% static 'js/evaluation/tolerance_auto_loader.js' %}"></script>
+</body>
+</html>

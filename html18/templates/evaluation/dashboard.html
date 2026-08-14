@@ -1,0 +1,348 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/evaluation/dashboard.css' %}">
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/evaluation/dashboard.js' %}"></script>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <div class="welcome-section">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h2>数控机床质量分级评价软件</h2>
+                <p>基于AHP与信息熵组合赋权方法的评价平台</p>
+            </div>
+            <div class="col-md-4 text-center">
+                <i class="fas fa-cogs" style="font-size: 6rem; opacity: 0.3;"></i>
+            </div>
+        </div>
+    </div>
+
+    {% if is_admin %}
+    {% endif %}
+
+    <div class="row mb-4">
+        <div class="col-12">
+            <h3 class="section-title">
+                <i class="fas fa-clipboard-check me-2"></i>评价模块
+            </h3>
+            <p class="module-desc">机床质量评价管理</p>
+            <div class="card module-card">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <a href="{% url 'machine_list' %}" class="text-decoration-none">
+                                <div class="card function-card">
+                                    <div class="card-body">
+                                        <i class="fas fa-database function-icon"></i>
+                                        <h5 class="function-title">机床管理</h5>
+                                        <p class="function-desc">查看和管理机床信息</p>
+                                        <button class="btn btn-primary btn-function">立即使用</button>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <a href="{% url 'evaluation_wizard' %}" class="text-decoration-none">
+                                <div class="card function-card">
+                                    <div class="card-body">
+                                        <i class="fas fa-magic function-icon"></i>
+                                        <h5 class="function-title">评价向导</h5>
+                                        <p class="function-desc">引导式评价流程</p>
+                                        <button class="btn btn-primary btn-function">立即使用</button>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <a href="{% url 'report_list' %}" class="text-decoration-none">
+                                <div class="card function-card">
+                                    <div class="card-body">
+                                        <i class="fas fa-file-alt function-icon"></i>
+                                        <h5 class="function-title">报告中心</h5>
+                                        <p class="function-desc">查看和下载评价报告</p>
+                                        <button class="btn btn-primary btn-function">立即使用</button>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <a href="{% url 'visualization_dashboard' %}" class="text-decoration-none">
+                                <div class="card function-card">
+                                    <div class="card-body">
+                                        <i class="fas fa-chart-pie function-icon"></i>
+                                        <h5 class="function-title">可视化分析</h5>
+                                        <p class="function-desc">五维度雷达图、权重分析图表</p>
+                                        <button class="btn btn-primary btn-function">立即使用</button>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if is_admin %}
+
+    <div class="row mb-4">
+        <div class="col-12">
+            <h3 class="section-title">
+                <i class="fas fa-balance-scale me-2"></i>权重管理模块
+            </h3>
+            <p class="module-desc">AHP与信息熵权重配置</p>
+            <div class="card module-card">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <a href="{% url 'run_evaluation_pro' %}" class="text-decoration-none">
+                                <div class="card function-card">
+                                    <div class="card-body">
+                                        <i class="fas fa-user-tie function-icon"></i>
+                                        <h5 class="function-title">专家打分</h5>
+                                        <p class="function-desc">专家级打分模式</p>
+                                        <button class="btn btn-primary btn-function">立即使用</button>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <a href="{% url 'run_evaluation_user' %}" class="text-decoration-none entropy-calc-link">
+                                <div class="card function-card">
+                                    <div class="card-body">
+                                        <i class="fas fa-chart-line function-icon"></i>
+                                        <h5 class="function-title">信息熵计算</h5>
+                                        <p class="function-desc">基于信息熵的权重计算</p>
+                                        <button class="btn btn-primary btn-function" id="entropy-calc-btn">立即使用</button>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <a href="{% url 'ahp_weight_management' %}" class="text-decoration-none">
+                                <div class="card function-card">
+                                    <div class="card-body">
+                                        <i class="fas fa-balance-scale function-icon"></i>
+                                        <h5 class="function-title">AHP权重管理</h5>
+                                        <p class="function-desc">管理AHP权重配置</p>
+                                        <button class="btn btn-primary btn-function">立即使用</button>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <a href="{% url 'comprehensive_weight_calculation' %}" class="text-decoration-none">
+                                <div class="card function-card">
+                                    <div class="card-body">
+                                        <i class="fas fa-chart-pie function-icon"></i>
+                                        <h5 class="function-title">精度分数计算</h5>
+                                        <p class="function-desc">计算AHP与信息熵精度分数</p>
+                                        <button class="btn btn-primary btn-function">立即使用</button>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <a href="{% url 'tolerance_management' %}" class="text-decoration-none">
+                                <div class="card function-card">
+                                    <div class="card-body">
+                                        <i class="fas fa-sliders-h function-icon"></i>
+                                        <h5 class="function-title">机床标准管理</h5>
+                                        <p class="function-desc">管理机床标准和参数</p>
+                                        <button class="btn btn-primary btn-function">立即使用</button>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <a href="{% url 'visualization_dashboard' %}#normal-distribution" class="text-decoration-none">
+                                <div class="card function-card">
+                                    <div class="card-body">
+                                        <i class="fas fa-chart-area function-icon"></i>
+                                        <h5 class="function-title">正态分布分析</h5>
+                                        <p class="function-desc">机床综合得分分布图</p>
+                                        <button class="btn btn-primary btn-function">立即使用</button>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <h3 class="section-title">
+        <i class="fas fa-clock me-2"></i>最近评价记录
+    </h3>
+    
+    <div class="card mb-4" data-is-admin="{{ is_admin|yesno:'true,false' }}">
+        <div class="card-body">
+            {% if is_admin %}
+            <div class="table-responsive" id="admin-table">
+                <table class="table table-hover table-striped">
+                    <thead class="table-light">
+                        <tr>
+                            <th>报告编号</th>
+                            <th>机床名称</th>
+                            <th>上传用户</th>
+                            <th>更新时间</th>
+                            <th>分数</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for result in evaluations %}
+                        <tr>
+                            <td>{{ result.report_number }}</td>
+                            <td>{{ result.machine_name }}</td>
+                            <td>{{ result.upload_user }}</td>
+                            <td>{{ result.updated_at|date:"Y-m-d H:i" }}</td>
+                            <td>
+                                <span class="badge {% if result.comprehensive_score >= 90 %}bg-success{% elif result.comprehensive_score >= 80 %}bg-primary{% elif result.comprehensive_score >= 70 %}bg-info{% elif result.comprehensive_score >= 60 %}bg-warning{% else %}bg-danger{% endif %}">
+                                    {{ result.comprehensive_score|floatformat:2 }}
+                                </span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="table-responsive" id="user-table">
+                <table class="table table-hover table-striped">
+                    <thead class="table-light">
+                        <tr>
+                            <th>报告编号</th>
+                            <th>机床名称</th>
+                            <th>上传用户</th>
+                            <th>更新时间</th>
+                            <th>分数</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for result in evaluations %}
+                        <tr>
+                            <td>{{ result.report_number }}</td>
+                            <td>{{ result.machine_name }}</td>
+                            <td>{{ result.upload_user }}</td>
+                            <td>{{ result.updated_at|date:"Y-m-d H:i" }}</td>
+                            <td>
+                                <span class="badge {% if result.comprehensive_score >= 90 %}bg-success{% elif result.comprehensive_score >= 80 %}bg-primary{% elif result.comprehensive_score >= 70 %}bg-info{% elif result.comprehensive_score >= 60 %}bg-warning{% else %}bg-danger{% endif %}">
+                                    {{ result.comprehensive_score|floatformat:2 }}
+                                </span>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center text-muted py-4">
+                                <i class="fas fa-inbox" style="font-size: 2rem; margin-bottom: 10px; display: block;"></i>
+                                暂无评价记录
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <script>
+    // 信息熵计算机床类型选择弹窗
+    document.addEventListener('DOMContentLoaded', function() {
+        const entropyCalcBtn = document.getElementById('entropy-calc-btn');
+        const entropyCalcLink = document.querySelector('.entropy-calc-link');
+        
+        if (entropyCalcBtn) {
+            entropyCalcBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                showMachineTypeSelectionDialog();
+            });
+        }
+        
+        if (entropyCalcLink) {
+            entropyCalcLink.addEventListener('click', function(e) {
+                e.preventDefault();
+                showMachineTypeSelectionDialog();
+            });
+        }
+    });
+
+    function showMachineTypeSelectionDialog() {
+        const modalHtml = `
+            <div id="machine-type-modal" class="modal" style="display: flex; position: fixed; z-index: 1060; left: 0; top: 0; width: 100%; height: 100%; overflow: hidden; background-color: rgba(0,0,0,0.5); justify-content: center; align-items: center;">
+                <div class="modal-dialog modal-dialog-centered" style="width: 90%; max-width: 500px;">
+                    <div class="modal-content" style="border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.3);">
+                        <div class="modal-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 10px 10px 0 0; padding: 20px;">
+                            <h5 class="modal-title" style="font-size: 1.3rem; font-weight: bold;">
+                                <i class="fas fa-cogs mr-2"></i>选择机床类型
+                            </h5>
+                            <button type="button" class="close" onclick="closeMachineTypeModal()" style="color: white; opacity: 1; font-size: 28px; font-weight: bold; background: none; border: none; cursor: pointer;">&times;</button>
+                        </div>
+                        <div class="modal-body" style="padding: 30px;">
+                            <p style="text-align: center; margin-bottom: 25px; color: #666; font-size: 1.1rem;">请选择要进行信息熵计算的机床类型：</p>
+                            <div class="d-flex flex-column gap-3">
+                                <button type="button" class="btn btn-outline-primary btn-lg machine-type-option" data-machine-type="machining_center" style="padding: 20px; font-size: 1.1rem; border-width: 2px; transition: all 0.3s;">
+                                    <i class="fas fa-arrows-alt-h mr-2"></i>加工中心
+                                </button>
+                                <button type="button" class="btn btn-outline-success btn-lg machine-type-option" data-machine-type="boring_milling_machine" style="padding: 20px; font-size: 1.1rem; border-width: 2px; transition: all 0.3s;">
+                                    <i class="fas fa-cube mr-2"></i>镗铣床
+                                </button>
+                            </div>
+                        </div>
+                        <div class="modal-footer" style="border-top: 1px solid #dee2e6; padding: 15px 30px;">
+                            <button type="button" class="btn btn-secondary" onclick="closeMachineTypeModal()" style="padding: 10px 30px;">取消</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+        
+        document.querySelectorAll('.machine-type-option').forEach(button => {
+            button.addEventListener('click', function() {
+                const machineType = this.getAttribute('data-machine-type');
+                closeMachineTypeModal();
+                navigateToEntropyCalculation(machineType);
+            });
+            
+            button.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-2px)';
+                this.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+            });
+            
+            button.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(0)';
+                this.style.boxShadow = 'none';
+            });
+        });
+    }
+
+    function closeMachineTypeModal() {
+        const modal = document.getElementById('machine-type-modal');
+        if (modal) {
+            modal.remove();
+        }
+    }
+
+    function navigateToEntropyCalculation(machineType) {
+        localStorage.setItem('selectedMachineType', machineType);
+        
+        if (machineType === 'machining_center') {
+            window.location.href = '/evaluation/run_user/?machine_type=machining_center';
+        } else if (machineType === 'boring_milling_machine') {
+            window.location.href = '/evaluation/run_user/?machine_type=boring_milling_machine';
+        }
+    }
+    </script>
+</div>
+{% endblock %}

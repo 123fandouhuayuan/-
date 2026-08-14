@@ -1,0 +1,26 @@
+# Django 项目依赖
+Django==4.2.16
+
+# 第三方库
+djangorestframework==3.14.0
+django-crispy-forms==2.1
+crispy-bootstrap5==2024.2
+python-dotenv==1.0.1
+
+# 数据处理库
+pandas==2.3.3
+numpy==2.2.6
+openpyxl==3.1.5  # 用于Excel文件读写
+
+# 图像处理库
+Pillow==12.1.0
+
+# 数据库驱动
+dmDjango==3.0.7
+dmPython==2.5.30
+
+# 开发工具
+# 可选：用于代码质量检查
+flake8==7.0.0
+black==24.4.2
+isort==5.13.2

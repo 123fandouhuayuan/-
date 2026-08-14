@@ -1,0 +1,24 @@
+[data-module="intelligence"] .indicator-item.level-1-item .indicator-header {
+    background: linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%);
+    color: white;
+}
+
+.intelligence-checkbox-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 8px;
+}
+
+.intelligence-level-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.intelligence-level-badge.l1 { background: #e0e0e0; color: #333; }
+.intelligence-level-badge.l2 { background: #c8e6c9; color: #2e7d32; }
+.intelligence-level-badge.l3 { background: #bbdefb; color: #1565c0; }
+.intelligence-level-badge.l4 { background: #ffe0b2; color: #e65100; }
+.intelligence-level-badge.l5 { background: #f8bbd0; color: #c2185b; }

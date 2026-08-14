@@ -1,0 +1,15 @@
+[data-module="performance"] .indicator-item.level-1-item .indicator-header {
+    background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+    color: white;
+}
+
+.performance-upload-area {
+    border: 2px dashed #11998e;
+    border-radius: 8px;
+    padding: 20px;
+    text-align: center;
+}
+
+.performance-score-summary .table th {
+    background-color: #e8f5e9;
+}

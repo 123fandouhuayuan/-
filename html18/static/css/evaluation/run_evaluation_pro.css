@@ -1,0 +1,278 @@
+.sidebar {
+    width: 15%;
+    background-color: #ffffff;
+    overflow-y: auto;
+    position: fixed;
+    left: 0;
+    top: 56px;
+    bottom: 0;
+    z-index: 1000;
+}
+
+.content-area {
+    width: 85%;
+    margin-left: 15%;
+    min-height: calc(100vh - 112px);
+    padding: 20px;
+    position: relative;
+}
+
+.indicator-hierarchy {
+    font-family: 'Microsoft YaHei', Arial, sans-serif;
+    padding: 15px 10px;
+}
+
+.indicator-item {
+    margin-bottom: 5px;
+}
+
+.indicator-header {
+    padding: 6px 8px;
+    border-radius: 3px;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: all 0.3s ease;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    min-height: 32px;
+}
+
+.indicator-header:hover {
+    transform: translateX(2px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+}
+
+.indicator-title {
+    font-weight: 600;
+    font-size: 12px;
+    text-align: left;
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.indicator-item.level-1-item .indicator-title {
+    text-align: left;
+    font-size: 13px;
+}
+
+.expand-icon {
+    font-weight: bold;
+    font-size: 14px;
+    transition: transform 0.3s ease;
+    flex-shrink: 0;
+    margin-left: 5px;
+}
+
+.indicator-item.expanded .expand-icon {
+    transform: rotate(45deg);
+}
+
+.indicator-content {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.5s ease-out;
+    padding-left: 10px;
+}
+
+/* 去除横向排列的四级指标容器的左边距 */
+.level-3-content > .level-4.horizontal {
+    padding-left: 0;
+}
+
+.indicator-item.expanded > .indicator-content {
+    max-height: 5000px;
+    transition: max-height 0.8s ease-in;
+}
+
+.indicator-item.level-1-item .indicator-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.indicator-item.level-2-item .indicator-header {
+    background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+    color: #333;
+}
+
+.indicator-item.level-3-item .indicator-header {
+    background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+    color: #333;
+    cursor: pointer;
+}
+
+.indicator-item.level-4-item .indicator-header {
+    background: linear-gradient(135deg, #d4fc79 0%, #96e6a1 100%);
+    color: #333;
+    padding: 8px 16px;
+}
+
+.indicator-item.level-4-item .indicator-title {
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.indicator-item.level-2-item,
+.indicator-item.level-3-item,
+.indicator-item.level-4-item {
+    margin-top: 2px;
+}
+
+.level-2 > .indicator-item,
+.level-3 > .indicator-item,
+.level-4 > .indicator-item {
+    margin-bottom: 1px;
+}
+
+/* 横向排列二级标题 - 在侧边栏中改为垂直排列 */
+.level-2.horizontal {
+    display: block;
+    padding-left: 0;
+}
+
+.level-2.horizontal .indicator-item.level-2-item {
+    margin-top: 5px;
+}
+
+/* 横向排列三级标题 - 在侧边栏中改为垂直排列 */
+.level-3.horizontal {
+    display: block;
+    padding-left: 0;
+}
+
+.level-3.horizontal .indicator-item.level-3-item {
+    margin-top: 5px;
+}
+
+
+
+.indicator-item.level-1-item {
+    margin-bottom: 10px;
+}
+
+/* 圆圈图标样式 */
+.circle-icon {
+    width: 10px;
+    height: 10px;
+    border: 2px solid #333;
+    border-radius: 50%;
+    display: inline-block;
+    flex-shrink: 0;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.3s ease;
+    pointer-events: auto;
+}
+
+/* 打勾样式 */
+.circle-icon.checked {
+    background-color: #28a745;
+    border-color: #28a745;
+}
+
+.circle-icon.checked::after {
+    content: '✓';
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -55%);
+    color: white;
+    font-size: 9px;
+    font-weight: bold;
+    line-height: 1;
+    z-index: 10;
+}
+
+/* 侧边栏底部按钮样式 */
+.sidebar-bottom-buttons {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 15%;
+    background-color: #ffffff;
+    padding: 15px;
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    border-top: 1px solid #e0e0e0;
+    box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
+    z-index: 1001;
+}
+
+.sidebar-bottom-buttons button {
+    flex: 1;
+    font-size: 14px;
+    padding: 8px 12px;
+    white-space: nowrap;
+}
+
+/* 矩阵容器样式 */
+.matrix-container {
+    position: relative;
+    max-width: 100%;
+    overflow-x: auto;
+    margin-bottom: 20px;
+}
+
+/* 设置表格固定大小 */
+.matrix-table {
+    min-width: 800px;
+}
+
+/* 为下拉菜单添加最大高度和滚动功能 */
+.matrix-dropdown-menu {
+    max-height: 200px;
+    overflow-y: auto;
+    min-width: 100px;
+}
+
+/* 为h5标签添加加粗样式 */
+h5.card-title {
+    font-weight: bold;
+}
+
+/* 快速导入Excel卡片样式 */
+.border-primary {
+    border: 2px solid #007bff !important;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 123, 255, 0.1);
+}
+
+.text-primary {
+    color: #007bff !important;
+}
+
+/* 上传按钮样式 */
+#upload-excel-btn {
+    font-weight: 600;
+    padding: 10px 20px;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+}
+
+#upload-excel-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 123, 255, 0.3);
+}
+
+/* 文件输入框样式 */
+#excel-file {
+    border-radius: 6px;
+}
+
+.input-group-text {
+    cursor: pointer;
+    border-radius: 6px 0 0 6px;
+}
+
+/* 文本成功样式 */
+.text-success {
+    color: #28a745 !important;
+}
+
+/* 文本危险样式 */
+.text-danger {
+    color: #dc3545 !important;
+}

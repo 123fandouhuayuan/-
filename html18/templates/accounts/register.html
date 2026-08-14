@@ -1,0 +1,198 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/accounts/register.css' %}">
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/accounts/register.js' %}"></script>
+{% endblock %}
+
+{% block content %}
+<div class="container register-container">
+    <div class="card register-card">
+        <div class="register-header">
+            <h3><i class="fas fa-user-plus"></i> 用户注册</h3>
+            <p>创建账户，开启质量评价之旅</p>
+        </div>
+        
+        <div class="register-body">
+            <form method="POST">
+                {% csrf_token %}
+                
+                <div class="form-section">
+                    <div class="form-section-title">
+                        <i class="fas fa-user-circle"></i>
+                        选择用户角色
+                    </div>
+                    
+                    <div class="role-selector">
+                        <label class="role-card selected">
+                            <input type="radio" name="role" value="user" checked required>
+                            <div class="role-icon"><i class="fas fa-user"></i></div>
+                            <div class="role-name">普通用户</div>
+                        </label>
+                        <label class="role-card">
+                            <input type="radio" name="role" value="expert" required>
+                            <div class="role-icon"><i class="fas fa-user-tie"></i></div>
+                            <div class="role-name">专家</div>
+                        </label>
+                        <label class="role-card">
+                            <input type="radio" name="role" value="admin" required>
+                            <div class="role-icon"><i class="fas fa-user-shield"></i></div>
+                            <div class="role-name">管理员</div>
+                        </label>
+                    </div>
+                    
+                    <div id="admin-key-div" class="admin-key-section" style="display: none;">
+                        <div class="form-group mb-0">
+                            <label for="id_admin_key" class="form-label">
+                                <i class="fas fa-key"></i> 管理员密钥
+                            </label>
+                            <input type="text" class="form-control" id="id_admin_key" name="admin_key" 
+                                   placeholder="请输入管理员密钥">
+                            <small class="form-text text-muted">
+                                注册管理员或专家账号需要提供有效的管理员密钥。请联系系统管理员获取。
+                            </small>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-section">
+                            <div class="form-section-title">
+                                <i class="fas fa-key"></i>
+                                账号信息
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="id_username" class="form-label">
+                                    <i class="fas fa-at"></i> 用户名
+                                </label>
+                                <input type="text" class="form-control" id="id_username" name="username" 
+                                       placeholder="请输入用户名" required maxlength="50">
+                                <small class="form-text text-muted">50个字符以内，只能包含字母、数字和 @/./+/-/_ 字符</small>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="id_password1" class="form-label">
+                                    <i class="fas fa-lock"></i> 密码
+                                </label>
+                                <input type="password" class="form-control" id="id_password1" name="password1" 
+                                       placeholder="请输入密码" required>
+                                <div id="password1-errors" class="password-error-container"></div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="id_password2" class="form-label">
+                                    <i class="fas fa-lock"></i> 确认密码
+                                </label>
+                                <input type="password" class="form-control" id="id_password2" name="password2" 
+                                       placeholder="请再次输入密码" required>
+                                <div id="password2-errors" class="password-error-container"></div>
+                            </div>
+                            
+                            <div class="password-requirements">
+                                <strong><i class="fas fa-exclamation-triangle"></i> 密码要求：</strong>
+                                <ul>
+                                    <li>至少 8 个字符</li>
+                                    <li>包含大写字母、小写字母、数字和特殊字符</li>
+                                    <li>特殊字符：!@#$%^&*()_+-=[]{}|;:,.<>?</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="form-section">
+                            <div class="form-section-title">
+                                <i class="fas fa-envelope"></i>
+                                联系方式
+                            </div>
+                            
+                            <div class="slider-verification" id="slider-verification">
+                                <label class="form-label">
+                                    <i class="fas fa-puzzle-piece"></i> 安全验证
+                                </label>
+                                <div class="slider-track" id="slider-track">
+                                    <div class="slider-track-inner"></div>
+                                    <div class="slider-track-text" id="slider-text">
+                                        <i class="fas fa-chevron-right"></i> 请拖动滑块完成验证
+                                    </div>
+                                    <div class="slider-thumb" id="slider-thumb">
+                                        <i class="fas fa-chevron-right"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="id_email" class="form-label">
+                                    <i class="fas fa-mail-bulk"></i> 联系邮箱
+                                </label>
+                                <div class="input-group">
+                                    <input type="email" class="form-control" id="id_email" name="email" 
+                                           placeholder="请输入邮箱地址" required>
+                                    <button type="button" class="btn btn-send-code" id="send-verification-code">
+                                        发送验证码
+                                    </button>
+                                </div>
+                                <div id="countdown-display" class="countdown-text"></div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="id_verification_code" class="form-label">
+                                    <i class="fas fa-shield-alt"></i> 邮箱验证码
+                                </label>
+                                <input type="text" class="form-control verification-input" id="id_verification_code" 
+                                       name="verification_code" maxlength="6" placeholder="6位验证码" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="id_company" class="form-label">
+                                    <i class="fas fa-building"></i> 公司名称
+                                </label>
+                                <input type="text" class="form-control" id="id_company" name="company" 
+                                       placeholder="请输入公司名称" required>
+                            </div>
+                            
+                            <div class="form-group mb-0">
+                                <label for="id_phone" class="form-label">
+                                    <i class="fas fa-phone"></i> 联系电话
+                                </label>
+                                <input type="tel" class="form-control" id="id_phone" name="phone" 
+                                       placeholder="请输入联系电话" required>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                {% if form.errors %}
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-circle"></i>
+                    {% for field in form %}
+                        {% for error in field.errors %}
+                            <p class="mb-0">{{ error }}</p>
+                        {% endfor %}
+                    {% endfor %}
+                </div>
+                {% endif %}
+                
+                <div class="text-center mt-4">
+                    <button type="submit" class="btn btn-register">
+                        <i class="fas fa-user-plus"></i> 立即注册
+                    </button>
+                </div>
+                
+                <div class="text-center mt-3">
+                    <span class="text-muted">已有账户？</span>
+                    <a href="{% url 'login' %}" class="btn-login-link">立即登录</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,458 @@
+{% extends 'base.html' %}
+
+{% block title %}信息熵权重计算{% endblock %}
+
+{% block page_title %}信息熵权重计算{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- CSRF令牌 -->
+    <input type="hidden" name="csrfmiddlewaretoken" value="{% csrf_token %}">
+    
+    <!-- 当前路径导航 -->
+    <div class="mb-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">当前路径</h5>
+                <p class="card-text">精度 &gt; 几何精度 &gt; 进给轴精度</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 左侧控制面板 -->
+    <div class="row">
+        <div class="col-md-3">
+            <!-- 基本信息设置 -->
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">基本信息设置</h5>
+                    <div class="mb-3">
+                        <label for="sample-count" class="form-label">样本数量：</label>
+                        <div class="input-group input-group-sm">
+                            <input type="number" class="form-control form-control-sm" id="sample-count" value="5" min="1" max="20">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Excel导入 -->
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Excel导入</h5>
+                    <div class="mb-2">
+                        <label for="excel-file" class="form-label">选择Excel文件：</label>
+                        <input type="file" class="form-control form-control-sm" id="excel-file" accept=".xlsx,.xls">
+                    </div>
+                    <button class="btn btn-sm btn-info w-100" id="import-excel-btn">导入Excel数据</button>
+                </div>
+            </div>
+            
+            <!-- 操作按钮 -->
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">操作</h5>
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-sm btn-primary" id="start-calculation-btn">开始计算</button>
+                        <button class="btn btn-sm btn-success" id="save-result-btn">保存结果</button>
+                        <button class="btn btn-sm btn-secondary" id="reset-btn">重置</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 右侧数据录入和结果区 -->
+        <div class="col-md-9">
+            <!-- 数据录入区 -->
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">数据录入区</h5>
+                    <div class="data-entry-container">
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-sm">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>机床</th>
+                                        <th>直线度</th>
+                                        <th>平行度</th>
+                                        <th>角度误差</th>
+                                        <th>垂直度</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="data-table-body">
+                                    <tr>
+                                        <td>机床1</td>
+                                        <td><input type="number" class="form-control form-control-sm" value="1"></td>
+                                        <td><input type="number" class="form-control form-control-sm" value="1"></td>
+                                        <td><input type="number" class="form-control form-control-sm" value="1"></td>
+                                        <td><input type="number" class="form-control form-control-sm" value="1"></td>
+                                    </tr>
+                                    <tr>
+                                        <td>机床2</td>
+                                        <td><input type="number" class="form-control form-control-sm" value="1"></td>
+                                        <td><input type="number" class="form-control form-control-sm" value="1"></td>
+                                        <td><input type="number" class="form-control form-control-sm" value="1"></td>
+                                        <td><input type="number" class="form-control form-control-sm" value="1"></td>
+                                    </tr>
+                                    <tr>
+                                        <td>机床3</td>
+                                        <td><input type="number" class="form-control form-control-sm" value="1"></td>
+                                        <td><input type="number" class="form-control form-control-sm" value="1"></td>
+                                        <td><input type="number" class="form-control form-control-sm" value="1"></td>
+                                        <td><input type="number" class="form-control form-control-sm" value="1"></td>
+                                    </tr>
+                                    <tr>
+                                        <td>机床4</td>
+                                        <td><input type="number" class="form-control form-control-sm" value="1"></td>
+                                        <td><input type="number" class="form-control form-control-sm" value="1"></td>
+                                        <td><input type="number" class="form-control form-control-sm" value="1"></td>
+                                        <td><input type="number" class="form-control form-control-sm" value="1"></td>
+                                    </tr>
+                                    <tr>
+                                        <td>机床5</td>
+                                        <td><input type="number" class="form-control form-control-sm" value="1"></td>
+                                        <td><input type="number" class="form-control form-control-sm" value="1"></td>
+                                        <td><input type="number" class="form-control form-control-sm" value="1"></td>
+                                        <td><input type="number" class="form-control form-control-sm" value="1"></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <div class="mt-2">
+                            <button class="btn btn-sm btn-secondary me-2" id="clear-data-btn">清空数据</button>
+                            <button class="btn btn-sm btn-secondary" id="load-example-btn">导入示例数据</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 计算结果模块 -->
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">计算结果</h5>
+                    <div id="calculation-result">
+                        <p class="text-muted">点击"开始计算"按钮查看结果</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- 确保jQuery已加载 -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<!-- 引入xlsx库用于读取Excel文件 -->
+<script src="https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script>
+
+
+// 等待DOM加载完成
+$(document).ready(function() {
+    console.log('DOM加载完成，初始化信息熵权重计算界面');
+    
+    // 更新数据表格
+    function updateDataTable() {
+        console.log('开始更新数据表格');
+        
+        // 获取样本数量
+        var sampleCount = parseInt($('#sample-count').val()) || 5;
+        var indicatorCount = 4; // 固定为4个指标
+        
+        // 限制范围
+        sampleCount = Math.max(1, Math.min(20, sampleCount));
+        
+        console.log('样本数量：' + sampleCount + '，指标数量：' + indicatorCount);
+        
+        // 更新表格内容
+        var bodyHtml = '';
+        for (var k = 1; k <= sampleCount; k++) {
+            bodyHtml += '<tr><td>机床' + k + '</td>';
+            for (var l = 1; l <= indicatorCount; l++) {
+                bodyHtml += '<td><input type="number" class="form-control form-control-sm" value="1"></td>';
+            }
+            bodyHtml += '</tr>';
+        }
+        
+        console.log('生成表格HTML：' + bodyHtml);
+        
+        // 更新表格
+        $('#data-table-body').html(bodyHtml);
+        console.log('表格更新完成');
+    }
+    
+    // 初始化表格
+    updateDataTable();
+    
+    // 样本数量变化时更新表格
+    $(document).on('change', '#sample-count', function() {
+        console.log('样本数量变化，更新表格');
+        updateDataTable();
+    });
+    
+    // 样本数量输入框回车键更新
+    $(document).on('keypress', '#sample-count', function(e) {
+        if (e.which === 13) {
+            console.log('回车键按下，更新表格');
+            updateDataTable();
+        }
+    });
+    
+    // 样本数量输入框实时更新
+    $(document).on('input', '#sample-count', function() {
+        var value = $(this).val();
+        if (value && !isNaN(value) && parseInt(value) > 0) {
+            console.log('样本数量输入，更新表格：' + value);
+            updateDataTable();
+        }
+    });
+    
+    // 清空数据按钮
+    $(document).on('click', '#clear-data-btn', function() {
+        $('#data-table-body input[type="number"]').val('1');
+    });
+    
+    // 导入示例数据按钮
+    $(document).on('click', '#load-example-btn', function() {
+        $('#data-table-body input[type="number"]').each(function(index) {
+            var value = 1 + Math.random() * 9;
+            $(this).val(value.toFixed(2));
+        });
+    });
+    
+    // 开始计算按钮
+    $(document).on('click', '#start-calculation-btn', function() {
+        console.log('开始计算信息熵权重');
+        
+        // 获取数据
+        var data = [];
+        $('#data-table-body tr').each(function() {
+            var row = [];
+            $(this).find('input[type="number"]').each(function() {
+                row.push(parseFloat($(this).val()) || 0);
+            });
+            data.push(row);
+        });
+        
+        console.log('获取数据：', data);
+        
+        // 调用后端API计算信息熵权重
+        $.ajax({
+            url: '/evaluation/api/calculate-entropy-weight/',
+            type: 'POST',
+            contentType: 'application/json',
+            headers: {
+                'X-CSRFToken': $('input[name="csrfmiddlewaretoken"]').val()
+            },
+            data: JSON.stringify({
+                data: data
+            }),
+            success: function(response) {
+                if (response.success) {
+                    var result = response.result;
+                    console.log('计算结果：', result);
+                    
+                    // 显示结果
+                    var resultHtml = '<div class="table-responsive"><table class="table table-bordered table-sm">';
+                    resultHtml += '<thead><tr><th>指标</th><th>信息熵</th><th>权重</th></tr></thead>';
+                    resultHtml += '<tbody>';
+                    
+                    var indicators = ['直线度', '平行度', '角度误差', '垂直度'];
+                    for (var i = 0; i < result.weights.length; i++) {
+                        resultHtml += '<tr>';
+                        resultHtml += '<td>' + (indicators[i] || '指标' + (i + 1)) + '</td>';
+                        resultHtml += '<td>' + result.entropy[i].toFixed(4) + '</td>';
+                        resultHtml += '<td>' + result.weights[i].toFixed(4) + '</td>';
+                        resultHtml += '</tr>';
+                    }
+                    
+                    resultHtml += '</tbody></table></div>';
+                    
+                    $('#calculation-result').html(resultHtml);
+                } else {
+                    alert('计算失败：' + response.error);
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('请求失败：', error);
+                alert('请求失败：' + error);
+            }
+        });
+    });
+    
+    // 重置按钮
+    $(document).on('click', '#reset-btn', function() {
+        $('#sample-count').val(5);
+        updateDataTable();
+        $('#calculation-result').html('<p class="text-muted">点击"开始计算"按钮查看结果</p>');
+    });
+    
+    // Excel导入按钮
+    $(document).on('click', '#import-excel-btn', function() {
+        console.log('开始导入Excel数据');
+        
+        var fileInput = $('#excel-file')[0];
+        if (!fileInput.files || !fileInput.files[0]) {
+            alert('请选择一个Excel文件');
+            return;
+        }
+        
+        var file = fileInput.files[0];
+        var reader = new FileReader();
+        
+        reader.onload = function(e) {
+            console.log('文件读取完成，开始解析Excel');
+            
+            try {
+                var data = new Uint8Array(e.target.result);
+                var workbook = XLSX.read(data, { type: 'array' });
+                
+                // 获取第一个sheet
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+                
+                // 获取所有单元格数据
+                var range = XLSX.utils.decode_range(worksheet['!ref']);
+                var rawData = [];
+                
+                // 从第二行开始读取数据（跳过表头）
+                for (var R = range.s.r + 1; R <= range.e.r; ++R) {
+                    var row = [];
+                    for (var C = range.s.c; C <= range.e.c; ++C) {
+                        var cellAddress = {c: C, r: R};
+                        var cellRef = XLSX.utils.encode_cell(cellAddress);
+                        var cell = worksheet[cellRef];
+                        row.push(cell ? cell.v : '');
+                    }
+                    rawData.push(row);
+                }
+                
+                console.log('Excel原始数据解析完成：', rawData);
+                
+                // 更新样本数量
+                var sampleCount = rawData.length;
+                $('#sample-count').val(sampleCount);
+                updateDataTable();
+                
+                // 填充数据
+                $('#data-table-body tr').each(function(index) {
+                    if (index < rawData.length) {
+                        var rowData = rawData[index];
+                        var inputs = $(this).find('input[type="number"]');
+                        
+                        // 填充数据到输入框（从第二列开始对应）
+                        inputs.each(function(inputIndex) {
+                            // Excel列索引：inputIndex 对应 1, 2, 3, 4（跳过第一列）
+                            var excelColumnIndex = inputIndex + 1;
+                            if (excelColumnIndex < rowData.length && rowData[excelColumnIndex]) {
+                                $(this).val(rowData[excelColumnIndex]);
+                            }
+                        });
+                    }
+                });
+                
+                alert('Excel数据导入成功！');
+            } catch (error) {
+                console.error('Excel解析错误：', error);
+                alert('Excel文件解析失败：' + error.message);
+            }
+        };
+        
+        reader.onerror = function() {
+            console.error('文件读取错误');
+            alert('文件读取失败');
+        };
+        
+        reader.readAsArrayBuffer(file);
+    });
+    
+    // 保存结果按钮
+    $(document).on('click', '#save-result-btn', function() {
+        console.log('开始保存计算结果');
+        
+        // 检查是否已计算
+        var resultTable = $('#calculation-result table');
+        if (!resultTable.length) {
+            alert('请先计算权重');
+            return;
+        }
+        
+        // 提取结果数据
+        var results = [];
+        resultTable.find('tbody tr').each(function() {
+            var indicatorName = $(this).find('td:eq(0)').text();
+            var entropyValue = $(this).find('td:eq(1)').text();
+            var weightValue = $(this).find('td:eq(2)').text();
+            
+            results.push({
+                indicator_name: indicatorName,
+                entropy_value: entropyValue,
+                weight_value: weightValue
+            });
+        });
+        
+        // 提取输入数据
+        var inputData = [];
+        $('#data-table-body tr').each(function() {
+            var machineName = $(this).find('td:eq(0)').text();
+            var straightness = $(this).find('input:eq(0)').val() || '0';
+            var parallelism = $(this).find('input:eq(1)').val() || '0';
+            var angleError = $(this).find('input:eq(2)').val() || '0';
+            var perpendicularity = $(this).find('input:eq(3)').val() || '0';
+            
+            inputData.push({
+                machine_name: machineName,
+                straightness: straightness,
+                parallelism: parallelism,
+                angle_error: angleError,
+                perpendicularity: perpendicularity
+            });
+        });
+        
+        // 构建请求数据
+        var requestData = {
+            sample_count: parseInt($('#sample-count').val()) || 0,
+            description: '信息熵权重计算_' + new Date().toLocaleString(),
+            results: results,
+            input_data: inputData
+        };
+        
+        console.log('保存数据：', requestData);
+        
+        // 显示加载状态
+        var btn = $(this);
+        btn.text('保存中...').prop('disabled', true);
+        
+        // 发送AJAX请求
+        $.ajax({
+            url: '/evaluation/api/save-entropy-result/',
+            type: 'POST',
+            data: JSON.stringify(requestData),
+            contentType: 'application/json',
+            headers: {
+                'X-CSRFToken': $('input[name="csrfmiddlewaretoken"]').val()
+            },
+            xhrFields: {
+                withCredentials: true
+            },
+            success: function(response) {
+                console.log('保存成功：', response);
+                btn.text('保存结果').prop('disabled', false);
+                
+                if (response.success) {
+                    alert('计算结果保存成功！计算ID：' + response.calculation_id);
+                } else {
+                    alert('保存失败：' + response.message);
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('保存失败：', error);
+                btn.text('保存结果').prop('disabled', false);
+                alert('保存失败，请重试');
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

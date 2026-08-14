@@ -1,0 +1,323 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block page_title %}数据可视化仪表板{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/visualization/visualization.css' %}">
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/echarts.min.js' %}"></script>
+<script src="{% static 'js/visualization/visualization.js' %}"></script>
+{% endblock %}
+
+{% block content %}
+    <div id="user-role-data" style="display:none;" data-is-admin="{% if is_admin %}true{% else %}false{% endif %}"></div>
+    
+    <div class="row">
+        <div class="col-md-12 mb-4">
+            <div class="card machine-type-selector-card">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-auto">
+                            <label for="machine-type-select" class="mb-0 fw-bold">
+                                <i class="fas fa-cogs me-2"></i>机床类型
+                            </label>
+                        </div>
+                        <div class="col-auto">
+                            <select id="machine-type-select" class="form-select">
+                                <option value="machining_center">加工中心</option>
+                                <option value="boring_milling_machine">镗铣床</option>
+                            </select>
+                        </div>
+                        <div class="col">
+                            <small class="text-muted">
+                                <i class="fas fa-info-circle me-1"></i>切换机床类型后自动更新图表
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 统计数据卡片 -->
+    <div class="row" id="stats-row">
+        <div class="col-md-3 mb-3">
+            <div class="card stats-card h-100" id="stats-total" style="display: none;">
+                <div class="card-header bg-success text-white">
+                    <h6 class="card-title mb-0"><i class="fas fa-calculator mr-2"></i>机床总数</h6>
+                </div>
+                <div class="card-body d-flex align-items-center justify-content-center">
+                    <h2 class="mb-0" id="total-machines">0</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card stats-card h-100" id="stats-average" style="display: none;">
+                <div class="card-header bg-info text-white">
+                    <h6 class="card-title mb-0"><i class="fas fa-chart-bar mr-2"></i>平均得分</h6>
+                </div>
+                <div class="card-body d-flex align-items-center justify-content-center">
+                    <h2 class="mb-0" id="average-score">0</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card stats-card h-100" id="stats-max" style="display: none;">
+                <div class="card-header bg-warning text-white">
+                    <h6 class="card-title mb-0"><i class="fas fa-arrow-up mr-2"></i>最高得分</h6>
+                </div>
+                <div class="card-body d-flex align-items-center justify-content-center">
+                    <h2 class="mb-0 text-success" id="max-score">0</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card stats-card h-100" id="stats-min" style="display: none;">
+                <div class="card-header bg-danger text-white">
+                    <h6 class="card-title mb-0"><i class="fas fa-arrow-down mr-2"></i>最低得分</h6>
+                </div>
+                <div class="card-body d-flex align-items-center justify-content-center">
+                    <h2 class="mb-0" id="min-score">0</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-md-12 mb-4">
+        <div class="card chart-card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="card-title mb-0"><i class="fas fa-chart-line mr-2"></i>综合权重分析图表</h5>
+            </div>
+            <div class="card-body">
+                <div id="initial-message" class="initial-message">
+                    <i class="fas fa-hand-pointer fa-3x mb-3 text-muted"></i>
+                    <h5 class="mb-3">请选择机床类型</h5>
+                    <p class="text-muted mb-0">使用上方下拉菜单选择机床类型以查看数据</p>
+                </div>
+                <div id="loading-indicator" class="loading-indicator" style="display: none;">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="sr-only">加载中...</span>
+                    </div>
+                    <p class="mt-3 text-muted">正在加载数据，请稍候...</p>
+                </div>
+                <div id="chart-container" class="chart-container" style="display: none; visibility: hidden;"></div>
+                <div id="no-data-message" class="no-data-message alert alert-warning" style="display: none;">
+                    <i class="fas fa-exclamation-triangle fa-3x mb-3"></i>
+                    <h5 class="mb-3">暂无数据</h5>
+                    <p class="mb-0">当前选择的机床类型暂无数据，请选择其他类型或添加数据。</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if is_admin %}
+    <!-- 机床综合得分正态分布分析 -->
+    <div class="row">
+        <div class="col-md-12 mb-4">
+            <div class="card chart-card" id="normal-distribution">
+                <div class="card-header bg-success text-white">
+                    <h5 class="card-title mb-0"><i class="fas fa-chart-area mr-2"></i>机床综合得分正态分布分析</h5>
+                </div>
+                <div class="card-body">
+                    <div id="normal-distribution-loading-indicator" class="loading-indicator" style="display: none;">
+                        <div class="spinner-border text-success" role="status">
+                            <span class="sr-only">加载中...</span>
+                        </div>
+                        <p class="mt-3 text-muted">正在计算正态分布数据，请稍候...</p>
+                    </div>
+                    <div id="normal-distribution-container" class="chart-container" style="display: none; visibility: hidden;"></div>
+                    <div id="normal-distribution-no-data-message" class="no-data-message alert alert-warning" style="display: none;">
+                        <i class="fas fa-exclamation-triangle fa-3x mb-3"></i>
+                        <h5 class="mb-3">暂无数据</h5>
+                        <p class="mb-0">当前选择的机床类型暂无数据，无法生成正态分布图表。</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 精度得分正态分布分析 -->
+    <div class="row">
+        <div class="col-md-12 mb-4">
+            <div class="card chart-card" id="precision-normal-distribution">
+                <div class="card-header bg-info text-white">
+                    <h5 class="card-title mb-0"><i class="fas fa-chart-area mr-2"></i>精度得分正态分布分析</h5>
+                </div>
+                <div class="card-body">
+                    <div id="precision-normal-distribution-loading-indicator" class="loading-indicator" style="display: none;">
+                        <div class="spinner-border text-info" role="status">
+                            <span class="sr-only">加载中...</span>
+                        </div>
+                        <p class="mt-3 text-muted">正在计算精度正态分布数据，请稍候...</p>
+                    </div>
+                    <div id="precision-normal-distribution-container" class="chart-container" style="display: none; visibility: hidden;"></div>
+                    <div id="precision-normal-distribution-no-data-message" class="no-data-message alert alert-warning" style="display: none;">
+                        <i class="fas fa-exclamation-triangle fa-3x mb-3"></i>
+                        <h5 class="mb-3">暂无数据</h5>
+                        <p class="mb-0">当前选择的机床类型暂无精度数据，无法生成正态分布图表。</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 性能得分正态分布分析 -->
+    <div class="row">
+        <div class="col-md-12 mb-4">
+            <div class="card chart-card" id="performance-normal-distribution">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0"><i class="fas fa-chart-area mr-2"></i>性能得分正态分布分析</h5>
+                </div>
+                <div class="card-body">
+                    <div id="performance-normal-distribution-loading-indicator" class="loading-indicator" style="display: none;">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="sr-only">加载中...</span>
+                        </div>
+                        <p class="mt-3 text-muted">正在计算性能正态分布数据，请稍候...</p>
+                    </div>
+                    <div id="performance-normal-distribution-container" class="chart-container" style="display: none; visibility: hidden;"></div>
+                    <div id="performance-normal-distribution-no-data-message" class="no-data-message alert alert-warning" style="display: none;">
+                        <i class="fas fa-exclamation-triangle fa-3x mb-3"></i>
+                        <h5 class="mb-3">暂无数据</h5>
+                        <p class="mb-0">当前选择的机床类型暂无性能数据，无法生成正态分布图表。</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 可靠性得分正态分布分析 -->
+    <div class="row">
+        <div class="col-md-12 mb-4">
+            <div class="card chart-card" id="reliability-normal-distribution">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="card-title mb-0"><i class="fas fa-chart-area mr-2"></i>可靠性得分正态分布分析</h5>
+                </div>
+                <div class="card-body">
+                    <div id="reliability-normal-distribution-loading-indicator" class="loading-indicator" style="display: none;">
+                        <div class="spinner-border text-warning" role="status">
+                            <span class="sr-only">加载中...</span>
+                        </div>
+                        <p class="mt-3 text-muted">正在计算可靠性正态分布数据，请稍候...</p>
+                    </div>
+                    <div id="reliability-normal-distribution-container" class="chart-container" style="display: none; visibility: hidden;"></div>
+                    <div id="reliability-normal-distribution-no-data-message" class="no-data-message alert alert-warning" style="display: none;">
+                        <i class="fas fa-exclamation-triangle fa-3x mb-3"></i>
+                        <h5 class="mb-3">暂无数据</h5>
+                        <p class="mb-0">当前选择的机床类型暂无可靠性数据，无法生成正态分布图表。</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 智能化得分正态分布分析 -->
+    <div class="row">
+        <div class="col-md-12 mb-4">
+            <div class="card chart-card" id="intelligence-normal-distribution">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="card-title mb-0"><i class="fas fa-chart-area mr-2"></i>智能化得分正态分布分析</h5>
+                </div>
+                <div class="card-body">
+                    <div id="intelligence-normal-distribution-loading-indicator" class="loading-indicator" style="display: none;">
+                        <div class="spinner-border text-secondary" role="status">
+                            <span class="sr-only">加载中...</span>
+                        </div>
+                        <p class="mt-3 text-muted">正在计算智能化正态分布数据，请稍候...</p>
+                    </div>
+                    <div id="intelligence-normal-distribution-container" class="chart-container" style="display: none; visibility: hidden;"></div>
+                    <div id="intelligence-normal-distribution-no-data-message" class="no-data-message alert alert-warning" style="display: none;">
+                        <i class="fas fa-exclamation-triangle fa-3x mb-3"></i>
+                        <h5 class="mb-3">暂无数据</h5>
+                        <p class="mb-0">当前选择的机床类型暂无智能化数据，无法生成正态分布图表。</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 绿色化得分正态分布分析 -->
+    <div class="row">
+        <div class="col-md-12 mb-4">
+            <div class="card chart-card" id="green-normal-distribution">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="card-title mb-0"><i class="fas fa-chart-area mr-2"></i>绿色化得分正态分布分析</h5>
+                </div>
+                <div class="card-body">
+                    <div id="green-normal-distribution-loading-indicator" class="loading-indicator" style="display: none;">
+                        <div class="spinner-border text-dark" role="status">
+                            <span class="sr-only">加载中...</span>
+                        </div>
+                        <p class="mt-3 text-muted">正在计算绿色化正态分布数据，请稍候...</p>
+                    </div>
+                    <div id="green-normal-distribution-container" class="chart-container" style="display: none; visibility: hidden;"></div>
+                    <div id="green-normal-distribution-no-data-message" class="no-data-message alert alert-warning" style="display: none;">
+                        <i class="fas fa-exclamation-triangle fa-3x mb-3"></i>
+                        <h5 class="mb-3">暂无数据</h5>
+                        <p class="mb-0">当前选择的机床类型暂无绿色化数据，无法生成正态分布图表。</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    <div class="row">
+        <div class="col-md-12 mb-4">
+            <div class="card usage-guide">
+                <div class="card-header bg-secondary text-white">
+                    <h6 class="card-title mb-0"><i class="fas fa-info-circle mr-2"></i>使用说明</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="text-primary"><i class="fas fa-filter mr-2"></i>机床类型选择</h6>
+                            <p class="text-muted small mb-0">使用页面顶部的全局机床类型选择器切换"加工中心"或"镗铣床"，系统会自动更新所有图表和统计数据。</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-primary"><i class="fas fa-chart-area mr-2"></i>图表交互</h6>
+                            <p class="text-muted small mb-0">悬停查看详细信息，使用缩放滑块查看细节。</p>
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-md-6">
+                            <h6 class="text-info"><i class="fas fa-radar mr-2"></i>雷达图使用</h6>
+                            <p class="text-muted small mb-0">选择机床类型后，在雷达图区域选择具体机床查看五维度评分。</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-primary"><i class="fas fa-image mr-2"></i>导出功能</h6>
+                            <p class="text-muted small mb-0">点击工具栏的保存图片按钮导出图表。</p>
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-md-6">
+                            <h6 class="text-primary"><i class="fas fa-sync-alt mr-2"></i>实时更新</h6>
+                            <p class="text-muted small mb-0">切换机床类型后，综合权重分析图表、各维度正态分布分析及统计数据会同步更新。</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-info"><i class="fas fa-chart-pie mr-2"></i>五维度评分</h6>
+                            <p class="text-muted small mb-0">雷达图展示精度、性能、可靠性、智能化、绿色化五个维度的评分详情。</p>
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-md-6">
+                            <h6 class="text-success"><i class="fas fa-chart-area mr-2"></i>正态分布分析</h6>
+                            <p class="text-muted small mb-0">正态分布图表展示机床综合得分的分布特征，包含均值线、标准差区间标记，直观展示数据集中趋势和离散程度。</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-warning"><i class="fas fa-sort-numeric-up mr-2"></i>得分排序</h6>
+                            <p class="text-muted small mb-0">综合权重分析图表中机床按分数从低到高排序，便于直观比较不同机床的综合得分水平。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

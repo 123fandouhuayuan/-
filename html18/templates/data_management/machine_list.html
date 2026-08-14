@@ -1,0 +1,1875 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}{{ title }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/data_management/machine_list.css' %}">
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/data_management/machine_list.js' %}"></script>
+<script>
+    window.APP_URLS = {
+        add_machine: "{% url 'add_machine' %}"
+    };
+</script>
+{% endblock %}
+
+{% block page_title %}{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <div class="row">
+            <div class="col-md-6">
+                <h5><strong>机床列表</strong></h5>
+            </div>
+            <div class="col-md-6">
+                <div class="d-flex flex-column align-items-end">
+                    <!-- 第一行：手动添加机床按钮 -->
+                    <div class="mb-2">
+                        <button type="button" class="btn btn-success" id="add-machine-btn">手动添加机床信息</button>
+                    </div>
+                    <!-- 第二行：下载模板和模板导入机床信息按钮 -->
+                    <div class="mb-2 d-flex flex-nowrap">
+                        <button type="button" class="btn btn-secondary" id="download-template-btn" style="margin-right: 10px;" title="下载数据导入模板" data-bs-toggle="modal" data-bs-target="#templateSelectModal">
+                            <i class="fas fa-file-download me-1"></i>下载模板
+                        </button>
+                        <button type="button" class="btn btn-primary" id="import-data-btn">模板导入机床信息</button>
+                    </div>
+                    <!-- 第三行：其他操作按钮 -->
+                    <div class="d-flex flex-nowrap">
+                        {% if request.user.is_superuser or request.user.userprofile.role == 'admin' %}
+                        <button type="button" class="btn btn-info" id="export-data-btn" style="margin-right: 10px;" title="仅导出未保存的机床数据">管理员下载未确认用户上传数据</button>
+                        <a href="/evaluation/run_user/" class="btn btn-warning" id="entropy-calc-btn">信息熵计算</a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="card-body">
+        <!-- 搜索筛选区域 -->
+        <div class="mb-4" style="background-color: #f8f9fa; padding: 15px; border-radius: 5px;">
+            <div class="row">
+                <div class="col-md-6">
+                    <label for="search-machine-name" class="form-label">机床型号</label>
+                    <input type="text" class="form-control" id="search-machine-name" placeholder="输入机床型号">
+                </div>
+                <div class="col-md-6">
+                    <label for="search-report-number" class="form-label">报告编号</label>
+                    <input type="text" class="form-control" id="search-report-number" placeholder="输入报告编号">
+                </div>
+            </div>
+            <div class="row mt-2">
+                <div class="col-md-12 d-flex justify-content-between align-items-center">
+                    <div>
+                        <button type="button" class="btn btn-primary" id="search-btn">搜索</button>
+                        <button type="button" class="btn btn-secondary" id="reset-search-btn">重置</button>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button type="button" class="btn btn-outline-secondary" id="back-button" onclick="window.location.href='/evaluation/'">
+                            <i class="fas fa-home me-1"></i>返回首页
+                        </button>
+                        <a href="/evaluation/wizard/" class="btn btn-success">
+                            <i class="fas fa-play-circle me-1"></i>开始评价
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 手动录入机床信息表单 -->
+        <div id="add-machine-form" class="mb-4" style="display: none;">
+            <div class="card bg-light">
+                <div class="card-body">
+                    <form id="machine-form">
+                        {% csrf_token %}
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label for="machine-type" class="form-label">机床类型</label>
+                                <select class="form-select" id="machine-type" name="machine_type" required>
+                                    <option value="">请选择机床类型</option>
+                                    <option value="machining_center">加工中心</option>
+                                    <option value="boring_milling_machine">镗铣床</option>
+                                </select>
+                                <div class="invalid-feedback">请选择机床类型</div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="machine-name" class="form-label">机床名称</label>
+                                <input type="text" class="form-control" id="machine-name" name="name" required maxlength="200" placeholder="请输入机床名称">
+                                <div class="invalid-feedback">请输入机床名称</div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="machine-number" class="form-label">机床编号</label>
+                                <input type="text" class="form-control" id="machine-number" name="machine_number" required maxlength="100" placeholder="请输入机床编号">
+                                <div class="invalid-feedback">请输入机床编号</div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="machine-report-number" class="form-label">报告编号</label>
+                                <input type="text" class="form-control" id="machine-report-number" name="report_number" required maxlength="100" placeholder="请输入报告编号">
+                                <div class="invalid-feedback">请输入报告编号</div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="specification-model" class="form-label">规格型号</label>
+                                <input type="text" class="form-control" id="specification-model" name="model" required maxlength="100" placeholder="请输入规格型号">
+                                <div class="invalid-feedback">请输入规格型号</div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="machine-manufacturer" class="form-label">生产厂家</label>
+                                <input type="text" class="form-control" id="machine-manufacturer" name="manufacturer" required maxlength="100" placeholder="请输入生产厂家">
+                                <div class="invalid-feedback">请输入生产厂家</div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="production-date" class="form-label">生产日期</label>
+                                <input type="month" class="form-control" id="production-date" name="production_date" required placeholder="请选择年月">
+                                <div class="invalid-feedback">请选择年月</div>
+                            </div>
+                        </div>
+                        
+                        <!-- 加工中心特有表单项目 -->
+                        <div id="horizontal-machining-form" class="mb-4" style="display: none;">
+                            <div class="card bg-light border border-primary">
+                                <div class="card-header bg-primary text-white">
+                                    <h6 class="mb-0">加工中心参数</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-bordered" style="width: 100%;">
+                                            <tbody>
+                                                <tr>
+                                                    <td style="width: 10%; padding: 10px; text-align: center;">X轴行程 (mm)</td>
+                                                    <td style="width: 10%; padding: 10px; text-align: center;">Y轴行程 (mm)</td>
+                                                    <td style="width: 10%; padding: 10px; text-align: center;">Z轴行程 (mm)</td>
+                                                    <td style="width: 12%; padding: 10px; text-align: center;">工作台短边长度 (mm)</td>
+                                                    <td style="width: 15%; padding: 10px; text-align: center;">工件尺寸 (mm)</td>
+                                                    <td style="width: 15%; padding: 10px; text-align: center;">主轴类型</td>
+                                                </tr>
+                                                <tr>
+                                                    <td style="padding: 10px; text-align: center;">
+                                                        <input type="number" class="form-control" id="x-axis-travel" name="x_axis_travel" step="0.1" min="0" style="width: 80%; max-width: 120px;">
+                                                    </td>
+                                                    <td style="padding: 10px; text-align: center;">
+                                                        <input type="number" class="form-control" id="y-axis-travel" name="y_axis_travel" step="0.1" min="0" style="width: 80%; max-width: 120px;">
+                                                    </td>
+                                                    <td style="padding: 10px; text-align: center;">
+                                                        <input type="number" class="form-control" id="z-axis-travel" name="z_axis_travel" step="0.1" min="0" style="width: 80%; max-width: 120px;">
+                                                    </td>
+                                                    <td style="padding: 10px; text-align: center;">
+                                                        <input type="number" class="form-control" id="worktable-length" name="worktable_length" step="0.1" min="0" style="width: 80%; max-width: 140px;">
+                                                    </td>
+                                                    <td style="padding: 10px;">
+                                                        <select class="form-select" id="workpiece-size" name="workpiece_size" style="width: 100%; min-width: 120px;">
+                                                            <option value="">请选择</option>
+                                                            <option value="80">80 mm</option>
+                                                            <option value="160">160 mm</option>
+                                                            <option value="320">320 mm</option>
+                                                        </select>
+                                                    </td>
+                                                    <td style="padding: 10px;">
+                                                        <select class="form-select" id="spindle-type" name="spindle_type" style="width: 100%; min-width: 120px;">
+                                                            <option value="">请选择</option>
+                                                            <option value="integral">整体主轴</option>
+                                                            <option value="attached">附加主轴</option>
+                                                        </select>
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 镗铣床特有表单项目 -->
+                        <div id="boring-milling-form" class="mb-4" style="display: none;">
+                            <div class="card bg-light border border-primary">
+                                <div class="card-header bg-primary text-white">
+                                    <h6 class="mb-0">镗铣床参数</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-bordered" style="width: 100%;">
+                                            <tbody>
+                                                <tr>
+                                                    <td style="width: 11%; padding: 10px; text-align: center;">立柱测量范围 (mm)</td>
+                                                    <td style="width: 11%; padding: 10px; text-align: center;">工作台X轴测量范围 (mm)</td>
+                                                    <td style="width: 11%; padding: 10px; text-align: center;">主轴箱Y轴测量范围 (mm)</td>
+                                                    <td style="width: 12%; padding: 10px; text-align: center;">数控镗轴或滑枕(Z轴)测量范围 (mm)</td>
+                                                    <td style="width: 12%; padding: 10px; text-align: center;">工作台长边长度 (mm)</td>
+                                                    <td style="width: 11%; padding: 10px; text-align: center;">镗轴直径 (mm)</td>
+                                                    <td style="width: 11%; padding: 10px; text-align: center;">铣轴直径 (mm)</td>
+                                                    <td style="width: 21%; padding: 10px; text-align: center;">工作台类型</td>
+                                                </tr>
+                                                <tr>
+                                                    <td style="padding: 10px; text-align: center;">
+                                                        <input type="number" class="form-control" id="boring-milling-column-range" name="column_measurement_range" step="0.1" min="0" style="width: 80%; max-width: 120px;">
+                                                    </td>
+                                                    <td style="padding: 10px; text-align: center;">
+                                                        <input type="number" class="form-control" id="boring-milling-worktable-x-range" name="worktable_x_range" step="0.1" min="0" style="width: 80%; max-width: 120px;">
+                                                    </td>
+                                                    <td style="padding: 10px; text-align: center;">
+                                                        <input type="number" class="form-control" id="boring-milling-spindle-box-y-range" name="spindle_box_y_range" step="0.1" min="0" style="width: 80%; max-width: 120px;">
+                                                    </td>
+                                                    <td style="padding: 10px; text-align: center;">
+                                                        <input type="number" class="form-control" id="boring-milling-z-axis-range" name="z_axis_measurement_range" step="0.1" min="0" style="width: 80%; max-width: 120px;">
+                                                    </td>
+                                                    <td style="padding: 10px; text-align: center;">
+                                                        <input type="number" class="form-control" id="boring-milling-worktable-length-lc" name="worktable_length_lc" step="0.1" min="0" style="width: 80%; max-width: 140px;">
+                                                    </td>
+                                                    <td style="padding: 10px; text-align: center;">
+                                                        <input type="number" class="form-control" id="boring-milling-boring-axis-diameter" name="boring_axis_diameter" step="0.1" min="0" style="width: 80%; max-width: 140px;">
+                                                    </td>
+                                                    <td style="padding: 10px; text-align: center;">
+                                                        <input type="number" class="form-control" id="boring-milling-milling-axis-diameter" name="milling_axis_diameter" step="0.1" min="0" style="width: 80%; max-width: 140px;">
+                                                    </td>
+                                                    <td style="padding: 10px;">
+                                                        <select class="form-select" id="boring-milling-worktable-type" name="worktable_type" style="width: 100%; min-width: 120px;">
+                                                            <option value="">请选择</option>
+                                                            <option value="fixed_indexing">固定分度的回转工作台</option>
+                                                            <option value="arbitrary_positioning">任意角度定位的回转工作台</option>
+                                                        </select>
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="text-right">
+                            <button type="button" class="btn btn-secondary mr-2" id="cancel-add-machine">取消</button>
+                            <button type="submit" class="btn btn-primary">保存</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 编辑机床信息表单 -->
+        <div id="edit-machine-form" class="mb-4" style="display: none;">
+            <div class="card bg-light">
+                <div class="card-body">
+                    <form id="edit-machine-form-form">
+                        {% csrf_token %}
+                        <input type="hidden" id="edit-machine-id" name="machine_id">
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label for="edit-machine-type" class="form-label">机床类型</label>
+                                <select class="form-select" id="edit-machine-type" name="machine_type" required>
+                                    <option value="">请选择机床类型</option>
+                                    <option value="machining_center">加工中心</option>
+                                    <option value="boring_milling_machine">镗铣床</option>
+                                </select>
+                                <div class="invalid-feedback">请选择机床类型</div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="edit-machine-name" class="form-label">机床名称</label>
+                                <input type="text" class="form-control" id="edit-machine-name" name="name" required maxlength="200" placeholder="请输入机床名称">
+                                <div class="invalid-feedback">请输入机床名称</div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="edit-machine-number" class="form-label">机床编号</label>
+                                <input type="text" class="form-control" id="edit-machine-number" name="machine_number" required maxlength="100" placeholder="请输入机床编号">
+                                <div class="invalid-feedback">请输入机床编号</div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="edit-machine-report-number" class="form-label">报告编号</label>
+                                <input type="text" class="form-control" id="edit-machine-report-number" name="report_number" required maxlength="100" placeholder="请输入报告编号">
+                                <div class="invalid-feedback">请输入报告编号</div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="edit-specification-model" class="form-label">规格型号</label>
+                                <input type="text" class="form-control" id="edit-specification-model" name="model" required maxlength="100" placeholder="请输入规格型号">
+                                <div class="invalid-feedback">请输入规格型号</div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="edit-machine-manufacturer" class="form-label">生产厂家</label>
+                                <input type="text" class="form-control" id="edit-machine-manufacturer" name="manufacturer" required maxlength="100" placeholder="请输入生产厂家">
+                                <div class="invalid-feedback">请输入生产厂家</div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="edit-production-date" class="form-label">生产日期</label>
+                                <input type="month" class="form-control" id="edit-production-date" name="production_date" required placeholder="请选择年月">
+                                <div class="invalid-feedback">请选择年月</div>
+                            </div>
+                        </div>
+                        
+                        <!-- 编辑加工中心特有表单项目 -->
+                        <div id="edit-horizontal-machining-form" class="mb-4" style="display: none;">
+                            <div class="card bg-light border border-primary">
+                                <div class="card-header bg-primary text-white">
+                                    <h6 class="mb-0">加工中心参数</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-bordered" style="width: 100%;">
+                                            <tbody>
+                                                <tr>
+                                                    <td style="width: 10%; padding: 10px; text-align: center;">X轴行程 (mm)</td>
+                                                    <td style="width: 10%; padding: 10px; text-align: center;">Y轴行程 (mm)</td>
+                                                    <td style="width: 10%; padding: 10px; text-align: center;">Z轴行程 (mm)</td>
+                                                    <td style="width: 12%; padding: 10px; text-align: center;">工作台短边长度 (mm)</td>
+                                                    <td style="width: 15%; padding: 10px; text-align: center;">工件尺寸 (mm)</td>
+                                                    <td style="width: 15%; padding: 10px; text-align: center;">主轴类型</td>
+                                                </tr>
+                                                <tr>
+                                                    <td style="padding: 10px; text-align: center;">
+                                                        <input type="number" class="form-control" id="edit-x-axis-travel" name="x_axis_travel" step="0.1" min="0" style="width: 80%; max-width: 120px;" onchange="updateXTolerancePreview(this.value)">
+                                                    </td>
+                                                    <td style="padding: 10px; text-align: center;">
+                                                        <input type="number" class="form-control" id="edit-y-axis-travel" name="y_axis_travel" step="0.1" min="0" style="width: 80%; max-width: 120px;" onchange="updateYTolerancePreview(this.value)">
+                                                    </td>
+                                                    <td style="padding: 10px; text-align: center;">
+                                                        <input type="number" class="form-control" id="edit-z-axis-travel" name="z_axis_travel" step="0.1" min="0" style="width: 80%; max-width: 120px;" onchange="updateZTolerancePreview(this.value)">
+                                                    </td>
+                                                    <td style="padding: 10px; text-align: center;">
+                                                        <input type="number" class="form-control" id="edit-worktable-length" name="worktable_length" step="0.1" min="0" style="width: 80%; max-width: 140px;">
+                                                    </td>
+                                                    <td style="padding: 10px;">
+                                                        <select class="form-select" id="edit-workpiece-size" name="workpiece_size" style="width: 100%; min-width: 120px;">
+                                                            <option value="">请选择</option>
+                                                            <option value="80">80 mm</option>
+                                                            <option value="160">160 mm</option>
+                                                            <option value="320">320 mm</option>
+                                                        </select>
+                                                    </td>
+                                                    <td style="padding: 10px;">
+                                                        <select class="form-select" id="edit-spindle-type" name="spindle_type" style="width: 100%; min-width: 120px;">
+                                                            <option value="">请选择</option>
+                                                            <option value="integral">整体主轴</option>
+                                                            <option value="attached">附加主轴</option>
+                                                        </select>
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 编辑镗铣床特有表单项目 -->
+                        <div id="edit-boring-milling-form" class="mb-4" style="display: none;">
+                            <div class="card bg-light border border-primary">
+                                <div class="card-header bg-primary text-white">
+                                    <h6 class="mb-0">镗铣床参数</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-bordered" style="width: 100%;">
+                                            <tbody>
+                                                <tr>
+                                                    <td style="width: 11%; padding: 10px; text-align: center;">立柱测量范围 (mm)</td>
+                                                    <td style="width: 11%; padding: 10px; text-align: center;">工作台X轴测量范围 (mm)</td>
+                                                    <td style="width: 11%; padding: 10px; text-align: center;">主轴箱Y轴测量范围 (mm)</td>
+                                                    <td style="width: 12%; padding: 10px; text-align: center;">数控镗轴或滑枕(Z轴)测量范围 (mm)</td>
+                                                    <td style="width: 12%; padding: 10px; text-align: center;">工作台长边长度 (mm)</td>
+                                                    <td style="width: 11%; padding: 10px; text-align: center;">镗轴直径 (mm)</td>
+                                                    <td style="width: 11%; padding: 10px; text-align: center;">铣轴直径 (mm)</td>
+                                                    <td style="width: 21%; padding: 10px; text-align: center;">工作台类型</td>
+                                                </tr>
+                                                <tr>
+                                                    <td style="padding: 10px; text-align: center;">
+                                                        <input type="number" class="form-control" id="edit-boring-milling-column-range" name="column_measurement_range" step="0.1" min="0" style="width: 80%; max-width: 120px;" onchange="updateXTolerancePreview(this.value)">
+                                                    </td>
+                                                    <td style="padding: 10px; text-align: center;">
+                                                        <input type="number" class="form-control" id="edit-boring-milling-worktable-x-range" name="worktable_x_range" step="0.1" min="0" style="width: 80%; max-width: 120px;" onchange="updateYTolerancePreview(this.value)">
+                                                    </td>
+                                                    <td style="padding: 10px; text-align: center;">
+                                                        <input type="number" class="form-control" id="edit-boring-milling-spindle-box-y-range" name="spindle_box_y_range" step="0.1" min="0" style="width: 80%; max-width: 120px;" onchange="updateZTolerancePreview(this.value)">
+                                                    </td>
+                                                    <td style="padding: 10px; text-align: center;">
+                                                        <input type="number" class="form-control" id="edit-boring-milling-z-axis-range" name="z_axis_measurement_range" step="0.1" min="0" style="width: 80%; max-width: 120px;">
+                                                    </td>
+                                                    <td style="padding: 10px; text-align: center;">
+                                                        <input type="number" class="form-control" id="edit-boring-milling-worktable-length-lc" name="worktable_length_lc" step="0.1" min="0" style="width: 80%; max-width: 140px;" onchange="updateWorktableLengthLcTolerancePreview(this.value)">
+                                                    </td>
+                                                    <td style="padding: 10px; text-align: center;">
+                                                        <input type="number" class="form-control" id="edit-boring-milling-boring-axis-diameter" name="boring_axis_diameter" step="0.1" min="0" style="width: 80%; max-width: 140px;">
+                                                    </td>
+                                                    <td style="padding: 10px; text-align: center;">
+                                                        <input type="number" class="form-control" id="edit-boring-milling-milling-axis-diameter" name="milling_axis_diameter" step="0.1" min="0" style="width: 80%; max-width: 140px;">
+                                                    </td>
+                                                    <td style="padding: 10px;">
+                                                        <select class="form-select" id="edit-boring-milling-worktable-type" name="worktable_type" style="width: 100%; min-width: 120px;">
+                                                            <option value="">请选择</option>
+                                                            <option value="fixed_indexing">固定分度的回转工作台</option>
+                                                            <option value="arbitrary_positioning">任意角度定位的回转工作台</option>
+                                                        </select>
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="text-right">
+                            <button type="button" class="btn btn-secondary mr-2" id="cancel-edit-machine">取消</button>
+                            <button type="submit" class="btn btn-primary">保存</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <div class="table-responsive" style="max-height: 600px;">
+            <table class="table table-striped table-hover table-bordered" style="width: 100%;">
+                <thead class="thead-dark sticky-top" style="background-color: #343a40; color: white;">
+                    <tr style="text-align: center;">
+                        <th style="width: 5%; min-width: 50px;">ID</th>
+                        <th style="min-width: 120px;">机床名称</th>
+                        <th style="min-width: 100px;">机床编号</th>
+                        <th style="min-width: 100px;">报告编号</th>
+                        <th style="min-width: 100px;">规格型号</th>
+                        <th style="min-width: 100px;">生产厂家</th>
+                        <th style="min-width: 90px;">生产日期</th>
+                        <th style="width: 10%; min-width: 100px;">机床类型</th>
+                        {% if request.user.is_superuser or request.user.userprofile.role == 'admin' %}
+                        <th style="width: 12%; min-width: 100px;">
+                            <a href="#" class="sort-link" data-sort="uploaded_by" style="color: black; text-decoration: none;">
+                                上传用户
+                                <span class="sort-icon" data-sort="uploaded_by">
+                                    <i class="fas fa-sort"></i>
+                                </span>
+                            </a>
+                        </th>
+                        {% endif %}
+                        <th style="width: 12%; min-width: 100px;">操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if machines %}
+                        {% for machine in machines %}
+                        <tr style="text-align: center; vertical-align: middle; height: 60px;">
+                            <td style="font-weight: 500;">{{ machine.id }}</td>
+                            <td style="text-align: left; padding-left: 15px;">{{ machine.name }}</td>
+                            <td style="text-align: left; padding-left: 15px;">{{ machine.machine_number|default:'' }}</td>
+                            <td style="text-align: left; padding-left: 15px;">{{ machine.report_number }}</td>
+                            <td style="text-align: left; padding-left: 15px;">{{ machine.model|default:'' }}</td>
+                            <td style="text-align: left; padding-left: 15px;">{{ machine.manufacturer|default:'' }}</td>
+                            <td>{{ machine.production_date|date:'Y-m'|default:'' }}</td>
+                            <td>{{ machine.get_machine_type_display }}</td>
+                            {% if request.user.is_superuser or request.user.userprofile.role == 'admin' %}
+                            <td>
+                                {% if machine.created_by %}
+                                    <span class="user-info-tooltip" 
+                                          data-username="{{ machine.created_by.username }}"
+                                          data-user-id="{{ machine.created_by.id }}"
+                                          data-full-name="{{ machine.created_by.get_full_name|default:machine.created_by.username }}"
+                                          data-company="{% if machine.created_by.userprofile %}{{ machine.created_by.userprofile.company }}{% endif %}"
+                                          data-phone="{% if machine.created_by.userprofile %}{{ machine.created_by.userprofile.phone }}{% endif %}"
+                                          data-email="{{ machine.created_by.email|default:'' }}"
+                                          style="cursor: help; border-bottom: 1px dotted #999;"
+                                          title="点击查看详细信息">
+                                        {{ machine.created_by.username }}（U{{ machine.created_by.id|default:"0000"|stringformat:"04d" }}）
+                                    </span>
+                                {% else %}
+                                    <span class="text-muted">未设置</span>
+                                {% endif %}
+                            </td>
+                            {% endif %}
+                            <td>
+                                {% if request.user.is_superuser or request.user.userprofile.role == 'admin' %}
+                                    {% if machine.created_by == request.user %}
+                                        <a href="#" class="btn btn-sm btn-primary mr-2 edit-btn" data-id="{{ machine.id }}">编辑</a>
+                                        <a href="#" class="btn btn-sm btn-danger delete-btn" data-id="{{ machine.id }}">删除</a>
+                                    {% else %}
+                                        {% if machine.admin_saved %}
+                                            <a href="#" class="btn btn-sm btn-primary mr-2 edit-btn" data-id="{{ machine.id }}">编辑</a>
+                                        {% else %}
+                                            <button type="button" class="btn btn-sm btn-success mr-2 enable-edit-btn" data-id="{{ machine.id }}" data-created-by="{{ machine.created_by.username }}">保存</button>
+                                        {% endif %}
+                                        <a href="#" class="btn btn-sm btn-danger delete-btn" data-id="{{ machine.id }}">删除</a>
+                                    {% endif %}
+                                {% else %}
+                                    <a href="#" class="btn btn-sm btn-primary mr-2 edit-btn" data-id="{{ machine.id }}">编辑</a>
+                                    <a href="#" class="btn btn-sm btn-danger delete-btn" data-id="{{ machine.id }}">删除</a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                    <tr>
+                        <td colspan="9" class="text-center" style="padding: 40px;">
+                            <p class="text-muted">暂无机床数据，请先添加机床信息。</p>
+                        </td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+// 允差预览函数 - 用于输入框的 onchange 事件
+async function updateXTolerancePreview(value) {
+    const tolerance = await calculateToleranceByXAxisTravel(parseFloat(value) || 0);
+    console.log('X 轴行程允差预览:', value, '->', tolerance);
+    // 自动保存当前输入值到临时存储
+    saveCurrentParameterToLocalStorage('x_axis_travel', value);
+    // 预留允差预览显示逻辑扩展点
+}
+
+async function updateYTolerancePreview(value) {
+    const tolerance = await calculateToleranceByYAxisTravel(parseFloat(value) || 0);
+    console.log('Y 轴行程允差预览:', value, '->', tolerance);
+    // 自动保存当前输入值到临时存储
+    saveCurrentParameterToLocalStorage('y_axis_travel', value);
+    // 预留允差预览显示逻辑扩展点
+}
+
+async function updateZTolerancePreview(value) {
+    const tolerance = await calculateToleranceByZAxisTravel(parseFloat(value) || 0);
+    console.log('Z 轴行程允差预览:', value, '->', tolerance);
+    // 自动保存当前输入值到临时存储
+    saveCurrentParameterToLocalStorage('z_axis_travel', value);
+    // 预留允差预览显示逻辑扩展点
+}
+
+// 工作台参数允差预览函数 - 镗铣床
+async function updateWorktableLengthTolerancePreview(value) {
+    const tolerance = await calculateToleranceByWorktableLength(parseFloat(value) || 0);
+    console.log('工作台长度允差预览:', value, '->', tolerance);
+    // 自动保存当前输入值到临时存储
+    saveCurrentParameterToLocalStorage('worktable_length', value);
+    // 预留允差预览显示逻辑扩展点
+}
+
+async function updateWorktableLengthLcTolerancePreview(value) {
+    const tolerance = await calculateToleranceByWorktableLengthLc(parseFloat(value) || 0);
+    console.log('工作台长边长度 Lc 允差预览:', value, '->', tolerance);
+    // 自动保存当前输入值到临时存储
+    saveCurrentParameterToLocalStorage('worktable_length_lc', value);
+    // 预留允差预览显示逻辑扩展点
+}
+
+async function updateWorkpieceSizeTolerancePreview(value) {
+    const tolerances = await getProcessingTolerancesByWorkpieceSize(value);
+    console.log('工件尺寸允差预览:', value, '->', tolerances);
+    // 自动保存当前输入值到临时存储
+    saveCurrentParameterToLocalStorage('workpiece_size', value);
+    // 预留允差预览显示逻辑扩展点
+}
+
+// 通用参数保存函数 - 将当前输入值保存到 localStorage
+function saveCurrentParameterToLocalStorage(parameterName, value) {
+    try {
+        // 获取当前编辑的机床 ID（从当前打开的编辑表单中获取）
+        const editForm = document.querySelector('#edit-machine-form');
+        let machineId = null;
+        
+        if (editForm) {
+            // 从编辑表单中获取机床 ID
+            const machineIdInput = document.getElementById('edit-machine-id');
+            machineId = machineIdInput ? machineIdInput.value : null;
+        }
+        
+        if (!machineId) {
+            console.warn('未找到机床 ID，无法保存参数:', parameterName);
+            return;
+        }
+        
+        // 获取现有的机床参数映射
+        const machineIdToParams = JSON.parse(localStorage.getItem('machineIdToParams') || '{}');
+        
+        // 初始化当前机床的数据结构
+        if (!machineIdToParams[machineId]) {
+            machineIdToParams[machineId] = {};
+        }
+        
+        // 保存参数值
+        machineIdToParams[machineId][parameterName] = value;
+        
+        // 写回 localStorage
+        localStorage.setItem('machineIdToParams', JSON.stringify(machineIdToParams));
+        
+        console.log(`参数已保存到 localStorage: 机床 ID=${machineId}, 参数=${parameterName}, 值=${value}`);
+    } catch (error) {
+        console.error('保存参数到 localStorage 时出错:', error);
+    }
+}
+
+// 通用允差计算函数（保留作为备用）
+function calculateTolerance(travel) {
+    if (travel <= 500) return 0.010;
+    else if (500 < travel && travel <= 800) return 0.015;
+    else if (800 < travel && travel <= 1250) return 0.020;
+    else if (1250 < travel && travel <= 2000) return 0.025;
+    else return 0.030;
+}
+
+// 从允差管理界面获取允差数据的函数
+async function getToleranceFromManagementInterface(machineId, axisType, travelValue) {
+    try {
+        // 调用允差管理界面的API
+        const response = await fetch(`/evaluation/api/get-tolerances/?machine_id=${machineId}`);
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        if (!data.success) {
+            throw new Error(data.error || '获取允差数据失败');
+        }
+        
+        // 根据API返回的数据结构解析允差值
+        const tolerances = data.values;
+        
+        // 根据轴类型返回对应的允差值
+        // API返回的数据结构：几何精度 -> 进给轴精度 -> [X轴直线度, Y轴直线度, Z轴直线度, 平行度]
+        if (axisType === 'x') {
+            const xTolerance = tolerances.几何精度?.进给轴精度?.[0];
+            
+            if (xTolerance !== undefined && xTolerance !== null) {
+                return xTolerance;
+            }
+            
+            return 0.020; // 默认值
+        } else if (axisType === 'y') {
+            const yTolerance = tolerances.几何精度?.进给轴精度?.[1];
+            
+            if (yTolerance !== undefined && yTolerance !== null) {
+                return yTolerance;
+            }
+            
+            return 0.015; // 默认值
+        } else if (axisType === 'z') {
+            const zTolerance = tolerances.几何精度?.进给轴精度?.[2];
+            
+            if (zTolerance !== undefined && zTolerance !== null) {
+                return zTolerance;
+            }
+            
+            return 0.015; // 默认值
+        }
+        
+        return 0.020; // 默认值
+    } catch (error) {
+        console.error('从允差管理界面获取允差数据失败:', error);
+        // 失败时回退到计算逻辑
+        return calculateTolerance(travelValue);
+    }
+}
+
+// 获取当前机床ID的函数
+function getCurrentMachineId() {
+    // 从URL参数获取machine_id
+    const urlParams = new URLSearchParams(window.location.search);
+    const machineId = urlParams.get('machine_id');
+    
+    // 如果没有URL参数，尝试从编辑表单的隐藏字段获取
+    if (!machineId) {
+        const editForm = document.getElementById('edit-machine-form');
+        if (editForm) {
+            const machineIdInput = editForm.querySelector('input[name="machine_id"]');
+            if (machineIdInput && machineIdInput.value) {
+                return machineIdInput.value;
+            }
+        }
+    }
+    
+    return machineId;
+}
+
+// 更新允差函数以使用允差管理界面数据
+async function calculateToleranceByXAxisTravel(x_travel, machineId = null) {
+    const currentMachineId = machineId || getCurrentMachineId();
+    return await getToleranceFromManagementInterface(currentMachineId, 'x', x_travel);
+}
+
+async function calculateToleranceByYAxisTravel(y_travel, machineId = null) {
+    const currentMachineId = machineId || getCurrentMachineId();
+    return await getToleranceFromManagementInterface(currentMachineId, 'y', y_travel);
+}
+
+async function calculateToleranceByZAxisTravel(z_travel, machineId = null) {
+    const currentMachineId = machineId || getCurrentMachineId();
+    return await getToleranceFromManagementInterface(currentMachineId, 'z', z_travel);
+}
+
+// 工作台参数允差计算函数 - 从允差管理界面获取
+async function calculateToleranceByWorktableLength(worktable_length, machineId = null) {
+    const currentMachineId = machineId || getCurrentMachineId();
+    try {
+        const response = await fetch(`/evaluation/api/get-tolerances/?machine_id=${currentMachineId}`);
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        if (!data.success) {
+            throw new Error(data.error || '获取允差数据失败');
+        }
+        
+        const tolerances = data.values;
+        return tolerances.几何精度?.工作台精度?.[0] || 0.025;
+    } catch (error) {
+        console.error('从允差管理界面获取工作台长度允差失败:', error);
+        if (worktable_length <= 500) return 0.015;
+        else if (500 < worktable_length && worktable_length <= 1000) return 0.025;
+        else if (1000 < worktable_length && worktable_length <= 1600) return 0.035;
+        else if (1600 < worktable_length && worktable_length <= 2500) return 0.050;
+        else return 0.060;
+    }
+}
+
+async function calculateToleranceByWorktableLengthLc(worktable_length_lc, machineId = null) {
+    const currentMachineId = machineId || getCurrentMachineId();
+    try {
+        const response = await fetch(`/evaluation/api/get-tolerances/?machine_id=${currentMachineId}`);
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        if (!data.success) {
+            throw new Error(data.error || '获取允差数据失败');
+        }
+        
+        const tolerances = data.values;
+        return tolerances.几何精度?.工作台精度?.[1] || 0.04;
+    } catch (error) {
+        console.error('从允差管理界面获取工作台长边长度Lc允差失败:', error);
+        return await calculateToleranceByWorktableLength(worktable_length_lc, currentMachineId);
+    }
+}
+
+async function calculateToleranceByWorktableLengthLb(worktable_length_lb, machineId = null) {
+    const currentMachineId = machineId || getCurrentMachineId();
+    try {
+        const response = await fetch(`/evaluation/api/get-tolerances/?machine_id=${currentMachineId}`);
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        if (!data.success) {
+            throw new Error(data.error || '获取允差数据失败');
+        }
+        
+        const tolerances = data.values;
+        const worktableFlatness = tolerances.几何精度?.工作台精度?.[0];
+        
+        if (worktableFlatness !== undefined && worktableFlatness !== null) {
+            return worktableFlatness;
+        }
+        
+        return 0.02;
+    } catch (error) {
+        console.error('从允差管理界面获取工作台短边长度Lb允差失败:', error);
+        return 0.02;
+    }
+}
+
+// 工件尺寸加工精度允差函数 - 镗铣床
+async function getProcessingTolerancesByWorkpieceSize(workpieceSize, machineId = null) {
+    console.log('获取加工精度允差值，工件尺寸:', workpieceSize);
+    
+    const currentMachineId = machineId || getCurrentMachineId();
+    
+    try {
+        const response = await fetch(`/evaluation/api/get-tolerances/?machine_id=${currentMachineId}`);
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        if (!data.success) {
+            throw new Error(data.error || '获取允差数据失败');
+        }
+        
+        const tolerances = data.values;
+        const processingTolerances = tolerances.加工精度?.工件几何精度 || [0.02, 0];
+        console.log('从允差管理界面获取加工精度允差值:', processingTolerances);
+        return processingTolerances;
+    } catch (error) {
+        console.error('从允差管理界面获取加工精度允差失败:', error);
+        
+        // 失败时回退到硬编码值（镗铣床加工精度允差表数据）
+        const fiveAxisMachiningCenterTolerances = {
+            // 工件尺寸 80mm 对应的允差值
+            '80': [
+                0.008, // 1. 圆柱度
+                0.008, // 2. 孔中心轴线与基准孔 A 的垂直度
+                0.008, // 3. 侧面的直线度
+                0.008, // 4. 相邻面与基准面 B 的垂直度
+                0.008, // 5. 相对面与基准面 B 的平行度
+                0.008, // 6. 侧面直线度
+                0.008, // 7. 侧面对基准 B 的倾斜度
+                0.010, // 8. 圆度
+                0.020, // 9. 外圆和内圆孔 C 的同心度
+                0.008, // 10. 斜面的直线度
+                0.008, // 11. 3°角斜面对基准 B 的倾斜度
+                0.040, // 12. 孔相对于内孔 C 的位置度
+                0.015  // 13. 内孔与外孔 D 的同心度
+            ],
+            // 工件尺寸 160mm 对应的允差值
+            '160': [
+                0.01,  // 1. 圆柱度
+                0.01,  // 2. 孔中心轴线与基准孔 A 的垂直度
+                0.01,  // 3. 侧面的直线度
+                0.01,  // 4. 相邻面与基准面 B 的垂直度
+                0.01,  // 5. 相对面与基准面 B 的平行度
+                0.01,  // 6. 侧面直线度
+                0.01,  // 7. 侧面对基准 B 的倾斜度
+                0.015, // 8. 圆度
+                0.025, // 9. 外圆和内圆孔 C 的同心度
+                0.01,  // 10. 斜面的直线度
+                0.01,  // 11. 3°角斜面对基准 B 的倾斜度
+                0.05,  // 12. 孔相对于内孔 C 的位置度
+                0.02   // 13. 内孔与外孔 D 的同心度
+            ],
+            // 工件尺寸 320mm 对应的允差值
+            '320': [
+                0.015, // 1. 圆柱度
+                0.015, // 2. 孔中心轴线与基准孔 A 的垂直度
+                0.015, // 3. 侧面的直线度
+                0.02,  // 4. 相邻面与基准面 B 的垂直度
+                0.02,  // 5. 相对面与基准面 B 的平行度
+                0.015, // 6. 侧面直线度
+                0.02,  // 7. 侧面对基准 B 的倾斜度
+                0.02,  // 8. 圆度
+                0.025, // 9. 外圆和内圆孔 C 的同心度
+                0.015, // 10. 斜面的直线度
+                0.02,  // 11. 3°角斜面对基准 B 的倾斜度
+                0.05,  // 12. 孔相对于内孔 C 的位置度
+                0.02   // 13. 内孔与外孔 D 的同心度
+            ]
+        };
+        
+        const tolerances = fiveAxisMachiningCenterTolerances[workpieceSize.toString()];
+        if (tolerances && tolerances.length === 13) {
+            console.log('根据工件尺寸获取加工精度允差值:', tolerances);
+            return tolerances;
+        }
+        
+        console.warn('未找到有效的加工精度允差数据，使用默认值（160mm 工件尺寸）');
+        return fiveAxisMachiningCenterTolerances['160'];
+    }
+}
+
+// ============================================
+// 接口串联功能：工件尺寸选择到允差值映射
+// ============================================
+
+// 主轴锥孔径向跳动允差值
+const spindleRunoutTolerances = {
+    // 整体主轴
+    'integral': {
+        near_spindle_end: 0.007,    // 靠近主轴端部
+        away_from_spindle_end: 0.015 // 距主轴端部300mm处
+    },
+    // 附加主轴
+    'attached': {
+        near_spindle_end: 0.01,      // 靠近主轴端部
+        away_from_spindle_end: 0.02  // 距主轴端部300mm处
+    }
+};
+
+// 加工中心加工精度允差表数据（13个项目）
+const horizontalMachiningCenterTolerances = {
+    // 工件尺寸160mm对应的允差值
+    '160': [
+        0.01,  // 1. 圆柱度（修正：应为0.01，不是0.15）
+        0.01,  // 2. 孔中心轴线与基准孔A的垂直度
+        0.01,  // 3. 侧面的直线度
+        0.01,  // 4. 相邻面与基准面B的垂直度
+        0.01,  // 5. 相对面与基准面B的平行度
+        0.01,  // 6. 侧面直线度
+        0.01,  // 7. 侧面对基准B的倾斜度
+        0.015, // 8. 圆度
+        0.025, // 9. 外圆和内圆孔C的同心度
+        0.01,  // 10. 斜面的直线度
+        0.01,  // 11. 3°角斜面对基准B的倾斜度
+        0.05,  // 12. 孔相对于内孔C的位置度
+        0.02   // 13. 内孔与外孔D的同心度
+    ],
+    // 工件尺寸320mm对应的允差值
+    '320': [
+        0.015, // 1. 圆柱度
+        0.015, // 2. 孔中心轴线与基准孔A的垂直度
+        0.015, // 3. 侧面的直线度
+        0.02,  // 4. 相邻面与基准面B的垂直度
+        0.02,  // 5. 相对面与基准面B的平行度
+        0.015, // 6. 侧面直线度
+        0.02,  // 7. 侧面对基准B的倾斜度
+        0.02,  // 8. 圆度
+        0.025, // 9. 外圆和内圆孔C的同心度
+        0.015, // 10. 斜面的直线度
+        0.02,  // 11. 3°角斜面对基准B的倾斜度
+        0.05,  // 12. 孔相对于内孔C的位置度
+        0.02   // 13. 内孔与外孔D的同心度
+    ]
+};
+
+// 工件几何精度数据录入页面的允差输入字段ID映射（供参考）
+// 注意：这些字段在工件几何精度数据录入页面中，不在当前页面
+const toleranceInputFieldIds = [
+    'tolerance-input-1',  // 对应第1个允差项目
+    'tolerance-input-2',  // 对应第2个允差项目
+    'tolerance-input-3',  // 对应第3个允差项目
+    'tolerance-input-4',  // 对应第4个允差项目
+    'tolerance-input-5',  // 对应第5个允差项目
+    'tolerance-input-6',  // 对应第6个允差项目
+    'tolerance-input-7',  // 对应第7个允差项目
+    'tolerance-input-8',  // 对应第8个允差项目
+    'tolerance-input-9',  // 对应第9个允差项目
+    'tolerance-input-10', // 对应第10个允差项目
+    'tolerance-input-11', // 对应第11个允差项目
+    'tolerance-input-12', // 对应第12个允差项目
+    'tolerance-input-13'  // 对应第13个允差项目
+];
+
+// 主轴类型选择器事件监听
+function setupSpindleTypeMapping() {
+    const spindleTypeSelect = document.getElementById('edit-spindle-type');
+    
+    if (spindleTypeSelect) {
+        console.log('初始化主轴类型选择器映射功能...');
+        
+        // 添加change事件监听
+        spindleTypeSelect.addEventListener('change', function() {
+            const selectedType = this.value;
+            console.log('主轴类型选择变化:', selectedType);
+            
+            if (selectedType === 'integral' || selectedType === 'attached') {
+                // 方案A：在当前页面中强制查找并修改输入框
+                forceUpdateSpindleRunoutTolerances(selectedType);
+                
+                // 方案B：同时存储数据供其他页面使用
+                storeSpindleTypeData(selectedType);
+            } else {
+                console.log('请选择有效的主轴类型（整体主轴或附加主轴）');
+            }
+        });
+        
+        console.log('主轴类型选择器映射功能初始化完成');
+    } else {
+        console.warn('未找到主轴类型选择器（edit-spindle-type）');
+    }
+}
+
+// 工件尺寸选择器事件监听
+function setupWorkpieceSizeMapping() {
+    const workpieceSizeSelect = document.getElementById('edit-workpiece-size');
+    
+    if (workpieceSizeSelect) {
+        console.log('初始化工件尺寸选择器映射功能...');
+        
+        // 添加change事件监听
+        workpieceSizeSelect.addEventListener('change', function() {
+            const selectedSize = this.value;
+            console.log('工件尺寸选择变化:', selectedSize);
+            
+            if (selectedSize === '160' || selectedSize === '320') {
+                // 存储工件尺寸和允差数据到localStorage
+                storeWorkpieceToleranceData(selectedSize);
+            } else {
+                console.log('请选择有效的工件尺寸（160mm或320mm）');
+            }
+        });
+        
+        console.log('工件尺寸选择器映射功能初始化完成');
+    } else {
+        console.warn('未找到工件尺寸选择器（edit-workpiece-size）');
+    }
+}
+
+// 强制更新主轴锥孔径向跳动允差值（在当前页面中）
+function forceUpdateSpindleRunoutTolerances(spindleType) {
+    console.log('强制更新主轴锥孔径向跳动允差值，主轴类型:', spindleType);
+    
+    // 获取对应的允差值
+    const tolerances = spindleRunoutTolerances[spindleType];
+    
+    if (!tolerances) {
+        console.error('主轴类型对应的允差数据不存在:', spindleType);
+        return;
+    }
+    
+    console.log('获取到的允差数据:', tolerances);
+    
+    // 强制查找所有只读的数字输入框
+    const allReadonlyInputs = document.querySelectorAll('input[type="number"][readonly]');
+    console.log(`找到 ${allReadonlyInputs.length} 个只读数字输入框`);
+    
+    let updatedCount = 0;
+    
+    // 查找并更新值为0.007和0.015的输入框
+    allReadonlyInputs.forEach((input, index) => {
+        console.log(`输入框 ${index}: value=${input.value}`);
+        
+        // 如果当前值是整体主轴的默认值，则更新为附加主轴的值
+        if (input.value === '0.007' && spindleType === 'attached') {
+            console.log('找到值为0.007的输入框，更新为0.01');
+            
+            // 临时移除只读属性
+            const originalReadOnly = input.readOnly;
+            input.readOnly = false;
+            
+            // 更新值
+            input.value = tolerances.near_spindle_end; // 0.01
+            
+            // 恢复只读属性
+            input.readOnly = originalReadOnly;
+            
+            // 触发change事件
+            input.dispatchEvent(new Event('change', { bubbles: true }));
+            
+            updatedCount++;
+            console.log('更新成功：0.007 → 0.01');
+        }
+        
+        if (input.value === '0.015' && spindleType === 'attached') {
+            console.log('找到值为0.015的输入框，更新为0.02');
+            
+            // 临时移除只读属性
+            const originalReadOnly = input.readOnly;
+            input.readOnly = false;
+            
+            // 更新值
+            input.value = tolerances.away_from_spindle_end; // 0.02
+            
+            // 恢复只读属性
+            input.readOnly = originalReadOnly;
+            
+            // 触发change事件
+            input.dispatchEvent(new Event('change', { bubbles: true }));
+            
+            updatedCount++;
+            console.log('更新成功：0.015 → 0.02');
+        }
+        
+        // 如果是整体主轴，确保值正确
+        if (spindleType === 'integral') {
+            if (input.value === '0.01' || input.value === '0.02') {
+                console.log(`找到值为${input.value}的输入框，需要恢复为整体主轴值`);
+                
+                // 临时移除只读属性
+                const originalReadOnly = input.readOnly;
+                input.readOnly = false;
+                
+                // 根据当前值判断应该恢复为什么值
+                if (input.value === '0.01') {
+                    input.value = 0.007;
+                    console.log('恢复成功：0.01 → 0.007');
+                } else if (input.value === '0.02') {
+                    input.value = 0.015;
+                    console.log('恢复成功：0.02 → 0.015');
+                }
+                
+                // 恢复只读属性
+                input.readOnly = originalReadOnly;
+                
+                // 触发change事件
+                input.dispatchEvent(new Event('change', { bubbles: true }));
+                
+                updatedCount++;
+            }
+        }
+    });
+    
+    console.log(`强制更新完成：成功更新 ${updatedCount} 个输入框`);
+    
+    if (updatedCount === 0) {
+        console.warn('未找到需要更新的输入框，可能输入框不在当前页面中');
+        console.log('建议：请确认主轴锥孔径向跳动输入框所在的页面路径');
+    }
+}
+
+// 存储主轴类型数据到localStorage
+function storeSpindleTypeData(spindleType) {
+    console.log('开始存储主轴类型数据，主轴类型:', spindleType);
+    
+    // 获取对应的允差值
+    const tolerances = spindleRunoutTolerances[spindleType];
+    
+    if (!tolerances) {
+        console.error('主轴类型对应的允差数据不存在:', spindleType);
+        return;
+    }
+    
+    console.log('获取到的允差数据:', tolerances);
+    
+    // 存储到localStorage，供工件几何精度数据录入页面使用
+    const spindleData = {
+        spindle_type: spindleType,
+        spindle_tolerances: tolerances,
+        stored_at: new Date().toISOString(),
+        spindle_type_name: spindleType === 'integral' ? '整体主轴' : '附加主轴'
+    };
+    
+    localStorage.setItem('spindle_type_data', JSON.stringify(spindleData));
+    
+    console.log('主轴类型数据存储完成:', spindleData);
+    
+    // 显示存储结果提示（已隐藏）
+    showSpindleStorageResult(spindleType);
+}
+
+// 显示主轴存储结果提示（已隐藏）
+function showSpindleStorageResult(spindleType) {
+    // 创建或更新提示信息
+    let resultElement = document.getElementById('spindle-storage-result');
+    
+    if (!resultElement) {
+        resultElement = document.createElement('div');
+        resultElement.id = 'spindle-storage-result';
+        resultElement.style.cssText = 'display: none; background-color: #d1ecf1; border: 1px solid #bee5eb; border-radius: 0.375rem; padding: 0.75rem; margin-top: 1rem; font-size: 0.875rem; color: #0c5460;';
+        
+        // 找到主轴类型选择器的父元素，插入提示信息
+        const spindleTypeContainer = document.getElementById('edit-spindle-type').closest('td');
+        if (spindleTypeContainer) {
+            spindleTypeContainer.appendChild(resultElement);
+        }
+    }
+    
+    // 更新提示内容
+    const spindleTypeName = spindleType === 'integral' ? '整体主轴' : '附加主轴';
+    resultElement.innerHTML = `
+        <div style="font-weight: bold; margin-bottom: 0.5rem;">✓ 主轴类型数据已存储</div>
+        <div style="margin-bottom: 0.25rem;">主轴类型：<strong>${spindleTypeName}</strong></div>
+        <div style="margin-bottom: 0.25rem;">允差值：靠近主轴端部 <strong>${spindleRunoutTolerances[spindleType].near_spindle_end}</strong>，距主轴端部300mm处 <strong>${spindleRunoutTolerances[spindleType].away_from_spindle_end}</strong></div>
+        <div style="font-size: 0.8rem; color: #0c5460;">数据已保存到localStorage，可在工件几何精度数据录入页面自动填充</div>
+    `;
+    
+    // 确保元素保持隐藏状态
+    resultElement.style.display = 'none';
+}
+
+// 智能查找主轴锥孔径向跳动输入框
+function findSpindleRunoutInputField(position) {
+    console.log(`开始查找主轴锥孔径向跳动输入框（位置: ${position}）`);
+    
+    // 方法1：通过表格内容定位
+    const tables = document.querySelectorAll('table');
+    
+    for (let table of tables) {
+        // 查找包含"主轴锥孔的径向跳动"的表格行
+        const rows = table.querySelectorAll('tr');
+        
+        for (let row of rows) {
+            if (row.textContent.includes('主轴锥孔的径向跳动')) {
+                console.log('找到主轴锥孔径向跳动表格行');
+                
+                // 在该行中查找输入框
+                const inputFields = row.querySelectorAll('input[type="number"][readonly]');
+                
+                if (inputFields.length >= 2) {
+                    if (position === 'first') {
+                        console.log('找到第一个主轴锥孔径向跳动输入框');
+                        return inputFields[0];
+                    } else if (position === 'second') {
+                        console.log('找到第二个主轴锥孔径向跳动输入框');
+                        return inputFields[1];
+                    }
+                }
+            }
+        }
+    }
+    
+    // 方法2：通过类名和值定位
+    console.log('方法1未找到，尝试方法2：通过类名和值定位');
+    const allReadonlyInputs = document.querySelectorAll('input[type="number"][readonly]');
+    
+    // 查找值为0.007和0.015的输入框（整体主轴默认值）
+    for (let input of allReadonlyInputs) {
+        if (input.value === '0.007' || input.value === '0.015') {
+            console.log(`找到可能的主轴允差输入框: value=${input.value}`);
+            
+            // 根据位置返回对应的输入框
+            if (position === 'first' && input.value === '0.007') {
+                return input;
+            } else if (position === 'second' && input.value === '0.015') {
+                return input;
+            }
+        }
+    }
+    
+    // 方法3：通过父元素结构定位
+    console.log('方法2未找到，尝试方法3：通过父元素结构定位');
+    const allInputs = document.querySelectorAll('input[type="number"]');
+    const spindleInputs = [];
+    
+    for (let input of allInputs) {
+        // 检查输入框是否在主轴相关的上下文中
+        const parentText = input.closest('td')?.textContent || '';
+        if (parentText.includes('主轴') || parentText.includes('锥孔') || parentText.includes('径向跳动')) {
+            spindleInputs.push(input);
+            console.log(`找到主轴相关输入框: value=${input.value}, parentText=${parentText.substring(0, 50)}`);
+        }
+    }
+    
+    if (spindleInputs.length >= 2) {
+        if (position === 'first') {
+            return spindleInputs[0];
+        } else if (position === 'second') {
+            return spindleInputs[1];
+        }
+    }
+    
+    console.warn(`未找到主轴锥孔径向跳动输入框（位置: ${position}）`);
+    return null;
+}
+
+// 映射主轴锥孔径向跳动允差值到输入框
+function mapSpindleRunoutTolerances(spindleType) {
+    console.log('开始映射主轴锥孔径向跳动允差值，主轴类型:', spindleType);
+    
+    // 获取对应的允差值
+    const tolerances = spindleRunoutTolerances[spindleType];
+    
+    if (!tolerances) {
+        console.error('主轴类型对应的允差数据不存在:', spindleType);
+        return;
+    }
+    
+    console.log('获取到的允差数据:', tolerances);
+    
+    // 映射允差值到输入框
+    // 由于输入框没有ID，需要通过DOM遍历定位
+    
+    const inputFieldMappings = [
+        { 
+            selector: '主轴锥孔的径向跳动输入框 - 靠近主轴端部', 
+            tolerance: tolerances.near_spindle_end, 
+            label: '靠近主轴端部',
+            position: 'first' // 第一个输入框
+        },
+        { 
+            selector: '主轴锥孔的径向跳动输入框 - 距主轴端部300mm处', 
+            tolerance: tolerances.away_from_spindle_end, 
+            label: '距主轴端部300mm处',
+            position: 'second' // 第二个输入框
+        }
+    ];
+    
+    let successCount = 0;
+    
+    inputFieldMappings.forEach((mapping, index) => {
+        // 智能定位输入框（由于没有ID，需要通过DOM遍历）
+        const inputField = findSpindleRunoutInputField(mapping.position);
+        
+        if (inputField) {
+            // 检查输入框是否为只读状态
+            if (inputField.readOnly) {
+                console.warn(`输入框 ${mapping.fieldId} 为只读状态，尝试临时移除只读属性`);
+                
+                // 临时移除只读属性
+                const originalReadOnly = inputField.readOnly;
+                inputField.readOnly = false;
+                
+                // 设置允差值
+                inputField.value = mapping.tolerance;
+                
+                // 恢复只读属性
+                inputField.readOnly = originalReadOnly;
+                
+                // 触发change事件，确保其他监听器能收到变化
+                inputField.dispatchEvent(new Event('change', { bubbles: true }));
+                
+                console.log(`映射成功（只读处理）：${mapping.label} -> ${mapping.tolerance} (实际值: ${inputField.value})`);
+                successCount++;
+            } else {
+                // 设置允差值
+                inputField.value = mapping.tolerance;
+                
+                // 触发change事件，确保其他监听器能收到变化
+                inputField.dispatchEvent(new Event('change', { bubbles: true }));
+                
+                console.log(`映射成功：${mapping.label} -> ${mapping.tolerance} (实际值: ${inputField.value})`);
+                successCount++;
+            }
+        } else {
+            console.warn(`未找到允差输入字段: ${mapping.label}`);
+            
+            // 调试：搜索所有可能的输入字段
+            if (index === 0) {
+                console.log('调试信息 - 搜索所有主轴允差相关输入字段:');
+                const allInputs = document.querySelectorAll('input[type="number"]');
+                allInputs.forEach((input, i) => {
+                    if (input.id.includes('spindle') || input.id.includes('主轴') || 
+                        input.name.includes('spindle') || input.name.includes('主轴')) {
+                        console.log(`  输入字段 ${i}: id="${input.id}", name="${input.name}", value="${input.value}", readonly="${input.readOnly}"`);
+                    }
+                });
+            }
+        }
+    });
+    
+    console.log(`主轴锥孔径向跳动允差值映射完成：成功映射 ${successCount}/2 个项目`);
+    
+    // 显示映射结果提示
+    showSpindleMappingResult(successCount, spindleType);
+}
+
+// 存储工件尺寸和对应的允差数据到localStorage
+function storeWorkpieceToleranceData(workpieceSize) {
+    console.log('开始存储工件尺寸和允差数据，工件尺寸:', workpieceSize);
+    
+    // 获取对应的允差值数组
+    const tolerances = horizontalMachiningCenterTolerances[workpieceSize];
+    
+    if (!tolerances || tolerances.length !== 13) {
+        console.error('允差数据格式错误，无法存储');
+        return;
+    }
+    
+    console.log('获取到的允差数据:', tolerances);
+    
+    // 存储到localStorage，供工件几何精度数据录入页面使用
+    const toleranceData = {
+        workpiece_size: workpieceSize,
+        processing_tolerances: tolerances,
+        stored_at: new Date().toISOString()
+    };
+    
+    localStorage.setItem('workpiece_tolerance_data', JSON.stringify(toleranceData));
+    
+    console.log('工件尺寸和允差数据存储完成:', toleranceData);
+    
+    // 显示存储结果提示
+    showStorageResult(workpieceSize);
+}
+
+// 显示存储结果提示（已隐藏）
+function showStorageResult(workpieceSize) {
+    // 创建或更新提示信息
+    let resultElement = document.getElementById('tolerance-storage-result');
+    
+    if (!resultElement) {
+        resultElement = document.createElement('div');
+        resultElement.id = 'tolerance-storage-result';
+        resultElement.style.cssText = 'display: none; background-color: #d1ecf1; border: 1px solid #bee5eb; border-radius: 0.375rem; padding: 0.75rem; margin-top: 1rem; font-size: 0.875rem; color: #0c5460;';
+        
+        // 找到工件尺寸选择器的父元素，插入提示信息
+        const workpieceSizeContainer = document.getElementById('edit-workpiece-size').closest('td');
+        if (workpieceSizeContainer) {
+            workpieceSizeContainer.appendChild(resultElement);
+        }
+    }
+    
+    // 更新提示内容（但保持隐藏）
+    resultElement.innerHTML = `
+        <div style="font-weight: bold; margin-bottom: 0.5rem;">✓ 工件尺寸和允差数据已存储</div>
+        <div style="margin-bottom: 0.25rem;">工件尺寸：<strong>${workpieceSize} mm</strong></div>
+        <div style="margin-bottom: 0.25rem;">已存储 <strong>13/13</strong> 个加工精度允差项目</div>
+        <div style="font-size: 0.8rem; color: #0c5460;">数据已保存到localStorage，可在工件几何精度数据录入页面自动填充</div>
+    `;
+    
+    // 确保元素保持隐藏状态
+    resultElement.style.display = 'none';
+}
+
+// 显示主轴映射结果提示
+function showSpindleMappingResult(successCount, spindleType) {
+    // 创建或更新提示信息
+    let resultElement = document.getElementById('spindle-mapping-result');
+    
+    if (!resultElement) {
+        resultElement = document.createElement('div');
+        resultElement.id = 'spindle-mapping-result';
+        resultElement.style.cssText = 'display: none; background-color: #d4edda; border: 1px solid #c3e6cb; border-radius: 0.375rem; padding: 0.75rem; margin-top: 1rem; font-size: 0.875rem; color: #155724;';
+        
+        // 找到主轴类型选择器的父元素，插入提示信息
+        const spindleTypeContainer = document.getElementById('edit-spindle-type').closest('td');
+        if (spindleTypeContainer) {
+            spindleTypeContainer.appendChild(resultElement);
+        }
+    }
+    
+    // 更新提示内容
+    const spindleTypeName = spindleType === 'integral' ? '整体主轴' : '附加主轴';
+    
+    if (successCount === 2) {
+        resultElement.innerHTML = `
+            <div style="font-weight: bold; margin-bottom: 0.5rem;">✓ 主轴允差映射成功</div>
+            <div style="margin-bottom: 0.25rem;">主轴类型：<strong>${spindleTypeName}</strong></div>
+            <div style="margin-bottom: 0.25rem;">已成功映射 <strong>2/2</strong> 个主轴锥孔径向跳动允差项目</div>
+            <div style="font-size: 0.8rem; color: #0f5132;">允差值已自动填充到对应输入框</div>
+        `;
+    } else {
+        resultElement.innerHTML = `
+            <div style="font-weight: bold; margin-bottom: 0.5rem;">⚠ 主轴允差映射部分成功</div>
+            <div style="margin-bottom: 0.25rem;">主轴类型：<strong>${spindleTypeName}</strong></div>
+            <div style="margin-bottom: 0.25rem;">成功映射 <strong>${successCount}/2</strong> 个允差项目</div>
+            <div style="font-size: 0.8rem; color: #856404;">部分主轴允差输入字段未找到，请检查页面结构</div>
+        `;
+    }
+    
+    // 确保元素保持隐藏状态
+    resultElement.style.display = 'none';
+}
+
+// 页面加载完成后初始化映射功能
+document.addEventListener('DOMContentLoaded', function() {
+    // 延迟执行，确保其他DOMContentLoaded事件处理完成
+    setTimeout(() => {
+        console.log('DOM加载完成，开始初始化映射功能...');
+        
+        // 初始化工件尺寸选择器映射功能
+        setupWorkpieceSizeMapping();
+        
+        // 初始化主轴类型选择器映射功能
+        setupSpindleTypeMapping();
+        
+        // 检查是否有已选择的工件尺寸，如果有则自动执行一次存储
+        const initialWorkpieceSize = document.getElementById('edit-workpiece-size')?.value;
+        if (initialWorkpieceSize === '160' || initialWorkpieceSize === '320') {
+            console.log('检测到已选择工件尺寸，自动执行存储:', initialWorkpieceSize);
+            storeWorkpieceToleranceData(initialWorkpieceSize);
+        }
+        
+        // 检查是否有已选择的主轴类型，如果有则自动执行一次映射
+        const initialSpindleType = document.getElementById('edit-spindle-type')?.value;
+        if (initialSpindleType === 'integral' || initialSpindleType === 'attached') {
+            console.log('检测到已选择主轴类型，自动执行映射:', initialSpindleType);
+            mapSpindleRunoutTolerances(initialSpindleType);
+        }
+    }, 100);
+});
+
+// 导出函数供其他页面调用（如果需要）
+window.WorkpieceToleranceMapper = {
+    setupWorkpieceSizeMapping,
+    storeWorkpieceToleranceData,
+    horizontalMachiningCenterTolerances,
+    toleranceInputFieldIds
+};
+
+// 页面加载完成后初始化
+document.addEventListener('DOMContentLoaded', function() {
+    setupImportDataModal();
+});
+
+// 初始化导入数据模态框
+function setupImportDataModal() {
+    console.log('setupImportDataModal() 被调用');
+    const importDataBtn = document.getElementById('import-data-btn');
+    const importModal = document.getElementById('import-data-modal');
+    const importForm = document.getElementById('import-form');
+    const submitImportBtn = document.getElementById('submit-import');
+    const errorMessageDiv = document.getElementById('import-error-message');
+    
+    console.log('importDataBtn:', importDataBtn);
+    console.log('importModal:', importModal);
+    console.log('importForm:', importForm);
+    console.log('submitImportBtn:', submitImportBtn);
+    console.log('errorMessageDiv:', errorMessageDiv);
+    
+    if (importDataBtn && importModal) {
+        console.log('设置模态框事件处理程序');
+        // 显示模态框
+        importDataBtn.addEventListener('click', function() {
+            // 重置错误信息
+            errorMessageDiv.style.display = 'none';
+            errorMessageDiv.innerHTML = '';
+            // 重置表单
+            importForm.reset();
+            // 显示模态框
+            importModal.style.display = 'block';
+            importModal.classList.add('show');
+        });
+        
+        // 关闭模态框
+        const closeBtn = importModal.querySelector('.close');
+        const cancelBtn = importModal.querySelector('#cancel-import');
+        
+        if (closeBtn) {
+            closeBtn.addEventListener('click', function() {
+                importModal.style.display = 'none';
+                importModal.classList.remove('show');
+            });
+        }
+        
+        if (cancelBtn) {
+            cancelBtn.addEventListener('click', function() {
+                importModal.style.display = 'none';
+                importModal.classList.remove('show');
+            });
+        }
+        
+        // 点击模态框外部关闭
+        window.addEventListener('click', function(event) {
+            if (event.target === importModal) {
+                importModal.style.display = 'none';
+                importModal.classList.remove('show');
+            }
+        });
+        
+        // 阻止表单默认提交行为
+        if (importForm) {
+            importForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            });
+        }
+        
+        // 处理导入提交
+        if (submitImportBtn && importForm) {
+            console.log('设置导入提交事件处理程序');
+            submitImportBtn.addEventListener('click', function() {
+                console.log('导入按钮被点击');
+                // 重置错误信息
+                errorMessageDiv.style.display = 'none';
+                errorMessageDiv.innerHTML = '';
+                
+                // 验证文件是否选择
+                const fileInput = document.getElementById('file-upload');
+                if (!fileInput.files || fileInput.files.length === 0) {
+                    showImportError('请选择要导入的文件');
+                    return;
+                }
+                
+                // 验证文件类型
+                const file = fileInput.files[0];
+                const allowedExtensions = ['.xlsx', '.xls', '.csv'];
+                const fileExtension = file.name.toLowerCase().substring(file.name.lastIndexOf('.'));
+                
+                if (!allowedExtensions.includes(fileExtension)) {
+                    showImportError('不支持的文件类型，请上传 Excel (.xlsx, .xls) 或 CSV 格式的文件');
+                    return;
+                }
+                
+                // 创建FormData对象
+                const formData = new FormData(importForm);
+                
+                // 添加CSRF令牌
+                const csrfToken = getCSRFToken();
+                if (csrfToken) {
+                    formData.set('csrfmiddlewaretoken', csrfToken);
+                }
+                
+                console.log('FormData内容:', formData);
+                console.log('FormData包含data_file:', formData.has('data_file'));
+                console.log('FormData包含csrfmiddlewaretoken:', formData.has('csrfmiddlewaretoken'));
+                
+                // 显示加载状态
+                submitImportBtn.innerHTML = '导入中...';
+                submitImportBtn.disabled = true;
+                
+                // 发送AJAX请求
+                // 使用模板变量存储URL，避免IDE语法错误
+                const importUrl = "/data/import/";
+                console.log('发送导入请求到:', importUrl);
+                fetch(importUrl, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(response => {
+                    console.log('收到响应:', response.status, response.statusText);
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('响应数据:', data);
+                    submitImportBtn.innerHTML = '开始导入';
+                    submitImportBtn.disabled = false;
+                    
+                    if (data.success) {
+                        // 导入成功
+                        importModal.style.display = 'none';
+                        importModal.classList.remove('show');
+                        
+                        // 显示导入成功信息，包含机床数量
+                        var successMessage = '数据导入成功！';
+                        if (data.imported_count && data.imported_count > 0) {
+                            successMessage = '数据导入成功！已成功上传 ' + data.imported_count + ' 台机床';
+                        }
+                        alert(successMessage);
+                        
+                        // 刷新页面或更新机床列表
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 1000);
+                    } else {
+                        // 导入失败
+                        showImportError(data.message);
+                    }
+                })
+                .catch(error => {
+                    submitImportBtn.innerHTML = '开始导入';
+                    submitImportBtn.disabled = false;
+                    console.error('导入错误:', error);
+                    console.error('错误堆栈:', error.stack);
+                    showImportError(`导入过程中发生错误: ${error.message}，请重试`);
+                });
+            });
+        }
+    }
+    
+    // 显示导入错误信息
+    function showImportError(message) {
+        errorMessageDiv.innerHTML = `
+            <div class="alert alert-error alert-dismissible fade show font-weight-bold border-2 border-danger" role="alert" style="padding: 1rem; font-size: 1.1rem; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-exclamation-circle text-danger mr-3" style="font-size: 1.5rem;"></i>
+                    <div>${message}</div>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" onclick="this.closest('.alert').parentElement.style.display = 'none';"></button>
+            </div>
+        `;
+        errorMessageDiv.style.display = 'block';
+    }
+}
+
+// 导出数据功能
+document.addEventListener('DOMContentLoaded', function() {
+    const exportDataBtn = document.getElementById('export-data-btn');
+    
+    if (exportDataBtn) {
+        exportDataBtn.addEventListener('click', function() {
+            console.log('导出数据按钮被点击');
+            
+            // 确认导出
+            if (confirm('确定要导出所有机床数据到Excel文件吗？')) {
+                // 显示加载提示
+                const originalText = exportDataBtn.innerHTML;
+                exportDataBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 导出中...';
+                exportDataBtn.disabled = true;
+                
+                // 发送导出请求
+                fetch('/data/export/', {
+                    method: 'GET',
+                    headers: {
+                        'X-CSRFToken': document.querySelector('input[name="csrfmiddlewaretoken"]').value
+                    }
+                })
+                .then(response => {
+                    console.log('导出响应状态:', response.status);
+                    
+                    // 检查响应类型
+                    const contentType = response.headers.get('content-type');
+                    
+                    if (contentType && contentType.includes('application/json')) {
+                        // JSON响应，可能是错误信息
+                        return response.json().then(data => {
+                            if (!data.success) {
+                                throw new Error(data.message || '导出失败');
+                            }
+                            return { blob: null, filename: null, isJson: true };
+                        });
+                    }
+                    
+                    if (!response.ok) {
+                        throw new Error('导出失败');
+                    }
+                    
+                    // 获取文件名
+                    const contentDisposition = response.headers.get('Content-Disposition');
+                    let filename = '机床数据导出.xlsx';
+                    if (contentDisposition) {
+                        const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+                        if (filenameMatch && filenameMatch[1]) {
+                            filename = filenameMatch[1].replace(/['"]/g, '');
+                        }
+                    }
+                    
+                    return response.blob().then(blob => ({ blob, filename, isJson: false }));
+                })
+                .then(({ blob, filename, isJson }) => {
+                    if (isJson) {
+                        // JSON响应，说明没有数据
+                        alert('没有未保存的机床数据可以导出');
+                        return;
+                    }
+                    
+                    // 创建下载链接
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.style.display = 'none';
+                    a.href = url;
+                    a.download = filename;
+                    document.body.appendChild(a);
+                    a.click();
+                    
+                    // 清理
+                    window.URL.revokeObjectURL(url);
+                    document.body.removeChild(a);
+                    
+                    // 显示成功提示
+                    alert('数据导出成功！');
+                })
+                .catch(error => {
+                    console.error('导出错误:', error);
+                    alert('导出失败，请重试。错误详情: ' + error.message);
+                })
+                .finally(() => {
+                    // 恢复按钮状态
+                    exportDataBtn.innerHTML = originalText;
+                    exportDataBtn.disabled = false;
+                });
+            }
+        });
+    }
+});
+
+// 机床类型选择对话框功能
+document.addEventListener('DOMContentLoaded', function() {
+    const entropyCalcBtn = document.getElementById('entropy-calc-btn');
+    
+    if (entropyCalcBtn) {
+        entropyCalcBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            showMachineTypeSelectionDialog();
+        });
+    }
+});
+
+function showMachineTypeSelectionDialog() {
+    const modalHtml = `
+        <div id="machine-type-modal" class="modal" style="display: flex; position: fixed; z-index: 1060; left: 0; top: 0; width: 100%; height: 100%; overflow: hidden; background-color: rgba(0,0,0,0.5); justify-content: center; align-items: center;">
+            <div class="modal-dialog modal-dialog-centered" style="width: 90%; max-width: 500px;">
+                <div class="modal-content" style="border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.3);">
+                    <div class="modal-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 10px 10px 0 0; padding: 20px;">
+                        <h5 class="modal-title" style="font-size: 1.3rem; font-weight: bold;">
+                            <i class="fas fa-cogs mr-2"></i>选择机床类型
+                        </h5>
+                        <button type="button" class="close" onclick="closeMachineTypeModal()" style="color: white; opacity: 1; font-size: 28px; font-weight: bold; background: none; border: none; cursor: pointer;">&times;</button>
+                    </div>
+                    <div class="modal-body" style="padding: 30px;">
+                        <p style="text-align: center; margin-bottom: 25px; color: #666; font-size: 1.1rem;">请选择要进行信息熵计算的机床类型：</p>
+                        <div class="d-flex flex-column gap-3">
+                            <button type="button" class="btn btn-outline-primary btn-lg machine-type-option" data-machine-type="machining_center" style="padding: 20px; font-size: 1.1rem; border-width: 2px; transition: all 0.3s;">
+                                <i class="fas fa-arrows-alt-h mr-2"></i>加工中心
+                            </button>
+                            <button type="button" class="btn btn-outline-success btn-lg machine-type-option" data-machine-type="boring_milling_machine" style="padding: 20px; font-size: 1.1rem; border-width: 2px; transition: all 0.3s;">
+                                <i class="fas fa-cube mr-2"></i>镗铣床
+                            </button>
+                        </div>
+                    </div>
+                    <div class="modal-footer" style="border-top: 1px solid #dee2e6; padding: 15px 30px;">
+                        <button type="button" class="btn btn-secondary" onclick="closeMachineTypeModal()" style="padding: 10px 30px;">取消</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+    
+    document.querySelectorAll('.machine-type-option').forEach(button => {
+        button.addEventListener('click', function() {
+            const machineType = this.getAttribute('data-machine-type');
+            closeMachineTypeModal();
+            navigateToEntropyCalculation(machineType);
+        });
+        
+        button.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-2px)';
+            this.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+        });
+        
+        button.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0)';
+            this.style.boxShadow = 'none';
+        });
+    });
+}
+
+function closeMachineTypeModal() {
+    const modal = document.getElementById('machine-type-modal');
+    if (modal) {
+        modal.remove();
+    }
+}
+
+function navigateToEntropyCalculation(machineType) {
+    console.log('选择机床类型:', machineType);
+    
+    localStorage.setItem('selectedMachineType', machineType);
+    
+    // 统一使用 run_user 入口，通过 machine_type 参数区分机床类型
+    if (machineType === 'machining_center') {
+        window.location.href = '/evaluation/run_user/?machine_type=machining_center';
+    } else if (machineType === 'boring_milling_machine') {
+        window.location.href = '/evaluation/run_user/?machine_type=boring_milling_machine';
+    }
+}
+
+// 返回上一个页面
+function goBack() {
+    window.history.back();
+}
+</script>
+
+<!-- 导入数据模态框 -->
+<div id="import-data-modal" class="modal" style="display: none; position: fixed; z-index: 1050; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.4);">
+    <div class="modal-dialog modal-lg" style="margin: 10% auto; width: 80%; max-width: 800px;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">导入机床数据</h5>
+                <button type="button" class="close" style="color: #aaa; float: right; font-size: 28px; font-weight: bold; background: none; border: none; cursor: pointer;">&times;</button>
+            </div>
+            <div class="modal-body">
+                <!-- 错误提示区域 -->
+                <div id="import-error-message" class="mb-4" style="display: none;"></div>
+                
+                <form id="import-form" method="POST" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="mb-4">
+                        <label for="file-upload" class="form-label">选择文件</label>
+                        <input type="file" class="form-control" id="file-upload" name="data_file" accept=".xlsx,.xls,.csv">
+                        <div class="form-text">支持 Excel (.xlsx, .xls) 和 CSV 格式的文件</div>
+                    </div>
+                    
+                    
+                    <div class="mt-4">
+                        <h6>导入说明</h6>
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item">文件应包含机床的基本信息，如名称、型号、制造商等</li>
+                            <li class="list-group-item">导入过程可能需要几分钟时间，请耐心等待</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="row mt-4">
+                        <div class="col-md-6">
+                            <button type="button" class="btn btn-secondary" id="cancel-import">取消</button>
+                        </div>
+                        <div class="col-md-6 text-right">
+                            <button type="button" class="btn btn-primary" id="submit-import">开始导入</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 模板选择模态框 -->
+<div class="modal fade" id="templateSelectModal" tabindex="-1" aria-labelledby="templateSelectModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="templateSelectModalLabel">选择下载模板</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="关闭"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted mb-3">请选择要下载的机床类型模板：</p>
+                <div class="d-grid gap-2">
+                    <a href="{% url 'download_template' %}?type=machining_center" class="btn btn-outline-primary btn-lg">
+                        <i class="fas fa-cog me-2"></i>加工中心评分表
+                    </a>
+                    <a href="{% url 'download_template' %}?type=boring_milling" class="btn btn-outline-success btn-lg">
+                        <i class="fas fa-cogs me-2"></i>镗铣床评分表
+                    </a>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

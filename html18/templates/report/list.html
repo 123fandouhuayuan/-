@@ -1,0 +1,935 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block page_title %}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/report/list.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="page-header">
+        <div class="row align-items-center">
+            <div class="col-md-6">
+                <h4><i class="fas fa-file-alt me-2"></i>评价报告中心</h4>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="{% url 'evaluation_dashboard' %}"><i class="fas fa-home"></i> 首页</a></li>
+                        <li class="breadcrumb-item active">报告列表</li>
+                    </ol>
+                </nav>
+            </div>
+            <div class="col-md-6 text-md-end mt-3 mt-md-0">
+            </div>
+        </div>
+    </div>
+
+    <div class="stats-row">
+        <div class="stat-card">
+            <div class="icon primary">
+                <i class="fas fa-file-alt"></i>
+            </div>
+            <div>
+                <div class="value">{{ total_count }}</div>
+                <div class="label">报告总数</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="icon success">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <div>
+                <div class="value">{{ reports|length }}</div>
+                <div class="label">本页显示</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="icon warning">
+                <i class="fas fa-star"></i>
+            </div>
+            <div>
+                <div class="value">AAAAA</div>
+                <div class="label">最高等级</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="icon info">
+                <i class="fas fa-chart-line"></i>
+            </div>
+            <div>
+                <div class="value">5</div>
+                <div class="label">评价维度</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="filter-card">
+        <div class="row g-3 align-items-end">
+            <div class="col-md-4">
+                <label class="form-label text-muted small">搜索报告</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-white border-end-0">
+                        <i class="fas fa-search text-muted"></i>
+                    </span>
+                    <input type="text" class="form-control border-start-0" id="searchInput" placeholder="报告编号或机床型号...">
+                </div>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label text-muted small">质量等级</label>
+                <select class="form-select" id="gradeFilter">
+                    <option value="">全部等级</option>
+                    <option value="AAAAA">AAAAA</option>
+                    <option value="AAAA">AAAA</option>
+                    <option value="AAA">AAA</option>
+                    <option value="AA">AA</option>
+                    <option value="A">A</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label text-muted small">机床类型</label>
+                <select class="form-select" id="typeFilter">
+                    <option value="">全部类型</option>
+                    <option value="加工中心">加工中心</option>
+                    <option value="镗铣床">镗铣床</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label text-muted small">排序方式</label>
+                <select class="form-select" id="sortFilter">
+                    <option value="date">最新优先</option>
+                    <option value="score">得分优先</option>
+                    <option value="name">名称排序</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button class="btn btn-outline-secondary w-100" id="resetFilter">
+                    <i class="fas fa-redo me-1"></i>重置
+                </button>
+            </div>
+        </div>
+    </div>
+
+    {% if reports %}
+    <div class="report-table-card">
+        <div class="table-responsive">
+            <table class="table" id="reportTable">
+                <thead>
+                    <tr>
+                        <th class="checkbox-cell">
+                            <div class="custom-checkbox" id="selectAll"></div>
+                        </th>
+                        <th>机床类型</th>
+                        <th>机床名称</th>
+                        <th>机床编号</th>
+                        <th>报告编号</th>
+                        <th>规格型号</th>
+                        <th>生产厂家</th>
+                        <th>上传用户</th>
+                        <th>综合得分</th>
+                        <th>质量等级</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for report in reports %}
+                    <tr data-id="{{ report.id }}"
+                        data-grade="{{ report.grade.level }}" 
+                        data-type="{{ report.machine_type }}"
+                        data-search="{{ report.report_number }} {{ report.machine_model }} {{ report.machine_name }}"
+                        data-score="{{ report.comprehensive_score }}"
+                        data-date="{{ report.updated_at|date:'Y-m-d H:i:s' }}"
+                        data-name="{{ report.report_number }}"
+                        data-url="{% url 'report_detail' report.id %}"
+                        class="report-row clickable-row"
+                        onclick="window.location.href=this.dataset.url">
+                        <td>
+                            <div class="custom-checkbox report-checkbox" data-id="{{ report.id }}" onclick="event.stopPropagation()"></div>
+                        </td>
+                        <td>
+                            <span class="type-badge {{ report.machine_type_code }}">
+                                <i class="fas fa-cog"></i>
+                                {{ report.machine_type }}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="machine-name">{{ report.machine_name }}</span>
+                        </td>
+                        <td>
+                            <span class="machine-number">{{ report.machine_number }}</span>
+                        </td>
+                        <td>
+                            <span class="report-number">{{ report.report_number }}</span>
+                        </td>
+                        <td>
+                            <span class="model">{{ report.model }}</span>
+                        </td>
+                        <td>
+                            <span class="manufacturer">{{ report.manufacturer }}</span>
+                        </td>
+                        <td>
+                            <span class="upload-user">{{ report.upload_user }}</span>
+                        </td>
+                        <td class="score-cell">
+                            <div class="score-display">
+                                <span class="score-value" data-color="{{ report.grade.color }}">
+                                    {{ report.comprehensive_score|floatformat:1 }}
+                                </span>
+                                <div class="score-progress">
+                                    <div class="score-progress-bar" 
+                                         data-width="{{ report.comprehensive_score }}" data-bg="{{ report.grade.color }}">
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="grade-badge grade-{{ report.grade.level|lower }}">
+                                    {{ report.grade.level }}
+                                </span>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="d-flex gap-2 justify-content-center">
+                                <button class="action-btn delete" title="删除报告" data-report-id="{{ report.id }}" data-report-number="{{ report.report_number|escapejs }}" onclick="event.stopPropagation()">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="pagination-wrapper">
+            <div>
+                <button class="compare-btn" id="compareBtn" disabled>
+                    <i class="fas fa-balance-scale me-1"></i>
+                    <span id="compareBtnText">对比选中报告</span>
+                </button>
+            </div>
+            <nav aria-label="Page navigation">
+                <ul class="pagination">
+                    {% if reports.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ reports.previous_page_number }}">
+                            <i class="fas fa-chevron-left"></i>
+                        </a>
+                    </li>
+                    {% endif %}
+                    
+                    <li class="page-item active">
+                        <span class="page-info">{{ reports.number }} / {{ reports.paginator.num_pages }}</span>
+                    </li>
+                    
+                    {% if reports.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ reports.next_page_number }}">
+                            <i class="fas fa-chevron-right"></i>
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+    </div>
+    {% else %}
+    <div class="report-table-card">
+        <div class="empty-state">
+            <div class="icon">
+                <i class="fas fa-folder-open"></i>
+            </div>
+            <h5>暂无报告数据</h5>
+            <p>完成机床质量评价后，可在此查看生成的报告</p>
+            <a href="{% url 'evaluation_wizard' %}" class="btn btn-primary">
+                <i class="fas fa-play me-1"></i>开始评价
+            </a>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<div class="modal fade" id="compareModal" tabindex="-1">
+    <div class="modal-dialog modal-xl" style="margin-top: 70px;">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-balance-scale me-2"></i>报告对比分析
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <ul class="nav nav-tabs mb-3" id="compareTab" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="radar-tab" data-bs-toggle="tab" data-bs-target="#radarPanel" type="button" role="tab">
+                            <i class="fas fa-chart-pie me-1"></i>雷达图
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="bar-tab" data-bs-toggle="tab" data-bs-target="#barPanel" type="button" role="tab">
+                            <i class="fas fa-chart-bar me-1"></i>柱状图
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="table-tab" data-bs-toggle="tab" data-bs-target="#tablePanel" type="button" role="tab">
+                            <i class="fas fa-table me-1"></i>详细数据
+                        </button>
+                    </li>
+                </ul>
+                <div class="tab-content" id="compareTabContent">
+                    <div class="tab-pane fade show active" id="radarPanel" role="tabpanel">
+                        <div id="radarChart" style="height: 450px;"></div>
+                    </div>
+                    <div class="tab-pane fade" id="barPanel" role="tabpanel">
+                        <div id="barChart" style="height: 450px;"></div>
+                    </div>
+                    <div class="tab-pane fade" id="tablePanel" role="tabpanel">
+                        <div id="compareTable"></div>
+                    </div>
+                </div>
+                <div class="row mt-4">
+                    <div class="col-md-12">
+                        <div class="card border-info">
+                            <div class="card-header bg-info text-white py-2">
+                                <i class="fas fa-lightbulb me-1"></i>对比分析结论
+                            </div>
+                            <div class="card-body">
+                                <div id="compareConclusion"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/echarts.min.js' %}"></script>
+<script>
+$(document).ready(function() {
+    var selectedIds = [];
+    
+    $('#searchInput').on('input', filterReports);
+    $('#gradeFilter').on('change', filterReports);
+    $('#typeFilter').on('change', filterReports);
+    $('#sortFilter').on('change', sortReports);
+    
+    function filterReports() {
+        var search = $('#searchInput').val().toLowerCase();
+        var grade = $('#gradeFilter').val();
+        var type = $('#typeFilter').val();
+        
+        $('#reportTable tbody tr').each(function() {
+            var $row = $(this);
+            var rowSearch = ($row.data('search') || '').toLowerCase();
+            var rowGrade = $row.data('grade') || '';
+            var rowType = $row.data('type') || '';
+            
+            var matchSearch = !search || rowSearch.includes(search);
+            var matchGrade = !grade || rowGrade === grade;
+            var matchType = !type || rowType === type;
+            
+            $row.toggle(matchSearch && matchGrade && matchType);
+        });
+    }
+    
+    function sortReports() {
+        var sortBy = $('#sortFilter').val();
+        var $tbody = $('#reportTable tbody');
+        var $rows = $tbody.find('tr').get();
+        
+        $rows.sort(function(a, b) {
+            if (sortBy === 'date') {
+                var dateA = new Date($(a).data('date') || 0);
+                var dateB = new Date($(b).data('date') || 0);
+                return dateB - dateA;
+            } else if (sortBy === 'score') {
+                var scoreA = parseFloat($(a).data('score') || 0);
+                var scoreB = parseFloat($(b).data('score') || 0);
+                return scoreB - scoreA;
+            } else if (sortBy === 'name') {
+                var nameA = ($(a).data('name') || '').toLowerCase();
+                var nameB = ($(b).data('name') || '').toLowerCase();
+                return nameA.localeCompare(nameB);
+            }
+            return 0;
+        });
+        
+        $.each($rows, function(idx, row) {
+            $tbody.append(row);
+        });
+    }
+    
+    document.querySelectorAll('.score-value').forEach(function(el) {
+        var color = el.getAttribute('data-color');
+        if (color !== null) {
+            el.style.color = color;
+        }
+    });
+    
+    document.querySelectorAll('.score-progress-bar').forEach(function(el) {
+        var width = el.getAttribute('data-width');
+        var bg = el.getAttribute('data-bg');
+        if (width !== null) {
+            el.style.width = width + '%';
+        }
+        if (bg !== null) {
+            el.style.background = bg;
+        }
+    });
+    
+    $('#resetFilter').click(function() {
+        $('#searchInput').val('');
+        $('#gradeFilter').val('');
+        $('#typeFilter').val('');
+        $('#sortFilter').val('date');
+        filterReports();
+    });
+    
+    $('#selectAll').click(function() {
+        var $this = $(this);
+        var isChecked = $this.hasClass('checked');
+        
+        if (isChecked) {
+            $this.removeClass('checked');
+            $('.report-checkbox').removeClass('checked');
+            selectedIds = [];
+        } else {
+            $this.addClass('checked');
+            $('.report-checkbox').each(function() {
+                $(this).addClass('checked');
+                var id = $(this).data('id');
+                if (!selectedIds.includes(id)) {
+                    selectedIds.push(id);
+                }
+            });
+        }
+        updateCompareBtn();
+    });
+    
+    $('.report-checkbox').click(function() {
+        var $this = $(this);
+        var id = $this.data('id');
+        
+        if ($this.hasClass('checked')) {
+            $this.removeClass('checked');
+            selectedIds = selectedIds.filter(function(i) { return i !== id; });
+        } else {
+            $this.addClass('checked');
+            if (!selectedIds.includes(id)) {
+                selectedIds.push(id);
+            }
+        }
+        
+        var total = $('.report-checkbox').length;
+        var checked = $('.report-checkbox.checked').length;
+        if (checked === total) {
+            $('#selectAll').addClass('checked');
+        } else {
+            $('#selectAll').removeClass('checked');
+        }
+        
+        updateCompareBtn();
+    });
+    
+    function updateCompareBtn() {
+        var count = selectedIds.length;
+        var $btn = $('#compareBtn');
+        var $text = $('#compareBtnText');
+        
+        if (count < 2) {
+            $btn.prop('disabled', true);
+            $text.text('对比选中报告');
+        } else if (count > 5) {
+            $btn.prop('disabled', true);
+            $text.text('最多选择5个');
+        } else {
+            $btn.prop('disabled', false);
+            $text.text('对比选中报告 (' + count + ')');
+        }
+    }
+    
+    $('#compareBtn').click(function() {
+        if (selectedIds.length < 2) {
+            alert('请至少选择2个报告进行对比');
+            return;
+        }
+        
+        $.ajax({
+            url: '/reports/api/compare/',
+            method: 'POST',
+            headers: {'X-CSRFToken': getCookie('csrftoken')},
+            contentType: 'application/json',
+            data: JSON.stringify({report_ids: selectedIds}),
+            success: function(response) {
+                if (response.success) {
+                    $('#compareModal').modal('show');
+                    $('#compareModal').one('shown.bs.modal', function() {
+                        showCompareChart(response.reports);
+                    });
+                } else {
+                    alert(response.error);
+                }
+            },
+            error: function() {
+                alert('对比请求失败，请重试');
+            }
+        });
+    });
+    
+    var radarChartInstance = null;
+    var barChartInstance = null;
+    
+    function showCompareChart(reports) {
+        var colors = ['#667eea', '#11998e', '#d53f8c', '#4facfe', '#38ef7d', '#f093fb'];
+        var dimensionNames = ['精度', '性能', '可靠性', '智能化', '绿色化'];
+        var dimensionKeys = ['precision', 'performance', 'reliability', 'intelligence', 'green'];
+        
+        showCompareTable(reports, dimensionNames, dimensionKeys);
+        showCompareConclusion(reports, dimensionNames, dimensionKeys);
+        
+        setTimeout(function() {
+            showRadarChart(reports, colors, dimensionNames, dimensionKeys);
+            showBarChart(reports, colors);
+        }, 100);
+        
+        $('button[data-bs-toggle="tab"]').on('shown.bs.tab', function(e) {
+            setTimeout(function() {
+                if (radarChartInstance) {
+                    radarChartInstance.resize();
+                }
+                if (barChartInstance) {
+                    barChartInstance.resize();
+                }
+            }, 50);
+        });
+    }
+    
+    function showRadarChart(reports, colors, dimensionNames, dimensionKeys) {
+        if (radarChartInstance) {
+            radarChartInstance.dispose();
+        }
+        radarChartInstance = echarts.init(document.getElementById('radarChart'));
+        
+        function convertToPercentage(score, dimensionKey) {
+            if (score <= 5) {
+                if (dimensionKey === 'performance' || dimensionKey === 'reliability' || dimensionKey === 'green') {
+                    return 60 + 8 * score;
+                }
+                return score * 20;
+            }
+            return score;
+        }
+        
+        var seriesData = reports.map(function(r, idx) {
+            return {
+                name: r.machine_name || r.report_number,
+                value: dimensionKeys.map(function(key) { return convertToPercentage(r.scores[key], key); }),
+                itemStyle: { color: colors[idx] },
+                areaStyle: { opacity: 0.1 }
+            };
+        });
+        
+        var radarOption = {
+            tooltip: {
+                trigger: 'item',
+                backgroundColor: 'rgba(255,255,255,0.95)',
+                borderColor: '#e2e8f0',
+                borderWidth: 1,
+                textStyle: { color: '#4a5568' },
+                formatter: function(params) {
+                    var html = '<strong>' + params.name + '</strong><br/>';
+                    dimensionNames.forEach(function(name, idx) {
+                        html += name + ': <strong>' + params.value[idx].toFixed(1) + '</strong><br/>';
+                    });
+                    return html;
+                }
+            },
+            legend: {
+                data: reports.map(function(r) { return r.machine_name || r.report_number; }),
+                bottom: 10,
+                textStyle: { color: '#4a5568' }
+            },
+            radar: {
+                indicator: dimensionNames.map(function(name) {
+                    return { name: name, max: 100 };
+                }),
+                shape: 'polygon',
+                splitNumber: 5,
+                axisName: {
+                    color: '#4a5568',
+                    fontSize: 13,
+                    fontWeight: 'bold'
+                },
+                splitLine: {
+                    lineStyle: { color: '#e2e8f0' }
+                },
+                splitArea: {
+                    areaStyle: { color: ['#f8fafc', '#fff'] }
+                },
+                axisLine: {
+                    lineStyle: { color: '#e2e8f0' }
+                }
+            },
+            series: [{
+                type: 'radar',
+                data: seriesData,
+                lineStyle: { width: 2 },
+                symbol: 'circle',
+                symbolSize: 6
+            }]
+        };
+        
+        radarChartInstance.setOption(radarOption);
+        
+        $(window).resize(function() {
+            if (radarChartInstance) {
+                radarChartInstance.resize();
+            }
+        });
+    }
+    
+    function showBarChart(reports, colors) {
+        if (barChartInstance) {
+            barChartInstance.dispose();
+        }
+        barChartInstance = echarts.init(document.getElementById('barChart'));
+        
+        function convertToPercentage(score, dimensionKey) {
+            if (score <= 5) {
+                if (dimensionKey === 'performance' || dimensionKey === 'reliability' || dimensionKey === 'green') {
+                    return 60 + 8 * score;
+                }
+                return score * 20;
+            }
+            return score;
+        }
+        
+        var names = reports.map(function(r) { return r.machine_name || r.report_number; });
+        var barOption = {
+            tooltip: {
+                trigger: 'axis',
+                backgroundColor: 'rgba(255,255,255,0.95)',
+                borderColor: '#e2e8f0',
+                borderWidth: 1,
+                textStyle: { color: '#4a5568' },
+                axisPointer: { type: 'shadow' }
+            },
+            legend: {
+                data: ['综合得分', '精度', '性能', '可靠性', '智能化', '绿色化'],
+                bottom: 0
+            },
+            grid: {
+                left: '3%',
+                right: '4%',
+                bottom: '15%',
+                top: '8%',
+                containLabel: true
+            },
+            xAxis: {
+                type: 'category',
+                data: names,
+                axisLine: { lineStyle: { color: '#e2e8f0' } },
+                axisLabel: { color: '#4a5568', rotate: names.length > 3 ? 15 : 0 }
+            },
+            yAxis: {
+                type: 'value',
+                max: 100,
+                axisLine: { show: false },
+                splitLine: { lineStyle: { color: '#f1f5f9' } },
+                axisLabel: { color: '#94a3b8' }
+            },
+            series: [
+                {
+                    name: '综合得分',
+                    type: 'bar',
+                    data: reports.map(function(r) { return convertToPercentage(r.scores.comprehensive, 'comprehensive'); }),
+                    itemStyle: {
+                        borderRadius: [4, 4, 0, 0],
+                        color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                            {offset: 0, color: '#667eea'},
+                            {offset: 1, color: '#764ba2'}
+                        ])
+                    },
+                    label: { show: true, position: 'top', fontSize: 10, color: '#667eea', formatter: function(params) { return params.value.toFixed(1); } }
+                },
+                {
+                    name: '精度',
+                    type: 'bar',
+                    data: reports.map(function(r) { return convertToPercentage(r.scores.precision, 'precision'); }),
+                    itemStyle: { borderRadius: [4, 4, 0, 0], color: '#667eea' }
+                },
+                {
+                    name: '性能',
+                    type: 'bar',
+                    data: reports.map(function(r) { return convertToPercentage(r.scores.performance, 'performance'); }),
+                    itemStyle: { borderRadius: [4, 4, 0, 0], color: '#11998e' }
+                },
+                {
+                    name: '可靠性',
+                    type: 'bar',
+                    data: reports.map(function(r) { return convertToPercentage(r.scores.reliability, 'reliability'); }),
+                    itemStyle: { borderRadius: [4, 4, 0, 0], color: '#d53f8c' }
+                },
+                {
+                    name: '智能化',
+                    type: 'bar',
+                    data: reports.map(function(r) { return convertToPercentage(r.scores.intelligence, 'intelligence'); }),
+                    itemStyle: { borderRadius: [4, 4, 0, 0], color: '#4facfe' }
+                },
+                {
+                    name: '绿色化',
+                    type: 'bar',
+                    data: reports.map(function(r) { return convertToPercentage(r.scores.green, 'green'); }),
+                    itemStyle: { borderRadius: [4, 4, 0, 0], color: '#38ef7d' }
+                }
+            ]
+        };
+        
+        barChartInstance.setOption(barOption);
+        
+        $(window).resize(function() {
+            if (barChartInstance) {
+                barChartInstance.resize();
+            }
+        });
+    }
+    
+    function showCompareTable(reports, dimensionNames, dimensionKeys) {
+        function convertToPercentage(score, dimensionKey) {
+            if (score <= 5) {
+                if (dimensionKey === 'performance' || dimensionKey === 'reliability' || dimensionKey === 'green') {
+                    return 60 + 8 * score;
+                }
+                return score * 20;
+            }
+            return score;
+        }
+        
+        var tableHtml = '<div class="table-responsive"><table class="table table-bordered table-hover">';
+        tableHtml += '<thead class="table-light"><tr><th rowspan="2">报告编号</th><th rowspan="2">机床型号</th><th rowspan="2" class="text-center">综合得分</th><th colspan="5" class="text-center">各维度得分</th></tr>';
+        tableHtml += '<tr><th class="text-center">精度</th><th class="text-center">性能</th><th class="text-center">可靠性</th><th class="text-center">智能化</th><th class="text-center">绿色化</th></tr></thead><tbody>';
+        
+        var maxScores = {
+            comprehensive: Math.max.apply(null, reports.map(function(r) { return convertToPercentage(r.scores.comprehensive, 'comprehensive'); }))
+        };
+        dimensionKeys.forEach(function(key) {
+            maxScores[key] = Math.max.apply(null, reports.map(function(r) { return convertToPercentage(r.scores[key], key); }));
+        });
+        
+        reports.forEach(function(r) {
+            var comprehensivePercent = convertToPercentage(r.scores.comprehensive, 'comprehensive');
+            tableHtml += '<tr>';
+            tableHtml += '<td><strong>' + r.report_number + '</strong></td>';
+            tableHtml += '<td>' + (r.machine_name || '-') + '</td>';
+            tableHtml += '<td class="text-center ' + (comprehensivePercent === maxScores.comprehensive ? 'table-success fw-bold' : '') + '">' + comprehensivePercent.toFixed(1);
+            if (comprehensivePercent === maxScores.comprehensive && reports.length > 1) {
+                tableHtml += ' <i class="fas fa-crown text-warning" title="最高分"></i>';
+            }
+            tableHtml += '</td>';
+            
+            dimensionKeys.forEach(function(key) {
+                var scorePercent = convertToPercentage(r.scores[key], key);
+                var isMax = scorePercent === maxScores[key];
+                var scoreClass = getScoreClass(scorePercent);
+                tableHtml += '<td class="text-center ' + (isMax ? 'fw-bold ' : '') + scoreClass + '">' + scorePercent.toFixed(1);
+                if (isMax && reports.length > 1) {
+                    tableHtml += ' <i class="fas fa-star text-warning" title="该维度最高"></i>';
+                }
+                tableHtml += '</td>';
+            });
+            tableHtml += '</tr>';
+        });
+        
+        if (reports.length > 1) {
+            tableHtml += '<tr class="table-info"><td colspan="2"><strong>平均分</strong></td>';
+            var avgComprehensive = reports.reduce(function(sum, r) { return sum + convertToPercentage(r.scores.comprehensive, 'comprehensive'); }, 0) / reports.length;
+            tableHtml += '<td class="text-center fw-bold">' + avgComprehensive.toFixed(1) + '</td>';
+            dimensionKeys.forEach(function(key) {
+                var avg = reports.reduce(function(sum, r) { return sum + convertToPercentage(r.scores[key], key); }, 0) / reports.length;
+                tableHtml += '<td class="text-center fw-bold">' + avg.toFixed(1) + '</td>';
+            });
+            tableHtml += '</tr>';
+            
+            tableHtml += '<tr class="table-warning"><td colspan="2"><strong>最高分</strong></td>';
+            tableHtml += '<td class="text-center fw-bold">' + maxScores.comprehensive.toFixed(1) + '</td>';
+            dimensionKeys.forEach(function(key) {
+                tableHtml += '<td class="text-center fw-bold">' + maxScores[key].toFixed(1) + '</td>';
+            });
+            tableHtml += '</tr>';
+            
+            tableHtml += '<tr class="table-secondary"><td colspan="2"><strong>最低分</strong></td>';
+            var minComprehensive = Math.min.apply(null, reports.map(function(r) { return convertToPercentage(r.scores.comprehensive, 'comprehensive'); }));
+            tableHtml += '<td class="text-center fw-bold">' + minComprehensive.toFixed(1) + '</td>';
+            dimensionKeys.forEach(function(key) {
+                var min = Math.min.apply(null, reports.map(function(r) { return convertToPercentage(r.scores[key], key); }));
+                tableHtml += '<td class="text-center fw-bold">' + min.toFixed(1) + '</td>';
+            });
+            tableHtml += '</tr>';
+        }
+        
+        tableHtml += '</tbody></table></div>';
+        $('#compareTable').html(tableHtml);
+    }
+    
+    function getScoreClass(score) {
+        if (score >= 90) return 'text-success';
+        if (score >= 80) return 'text-primary';
+        if (score >= 70) return 'text-info';
+        if (score >= 60) return 'text-warning';
+        return 'text-danger';
+    }
+    
+    function showCompareConclusion(reports, dimensionNames, dimensionKeys) {
+        function convertToPercentage(score, dimensionKey) {
+            if (score <= 5) {
+                if (dimensionKey === 'performance' || dimensionKey === 'reliability' || dimensionKey === 'green') {
+                    return 60 + 8 * score;
+                }
+                return score * 20;
+            }
+            return score;
+        }
+        
+        if (reports.length < 2) {
+            $('#compareConclusion').html('<p class="text-muted mb-0">需要至少2个报告才能进行对比分析。</p>');
+            return;
+        }
+        
+        var sortedByComprehensive = reports.slice().sort(function(a, b) {
+            return convertToPercentage(b.scores.comprehensive, 'comprehensive') - convertToPercentage(a.scores.comprehensive, 'comprehensive');
+        });
+        
+        var best = sortedByComprehensive[0];
+        var worst = sortedByComprehensive[sortedByComprehensive.length - 1];
+        var diff = convertToPercentage(best.scores.comprehensive, 'comprehensive') - convertToPercentage(worst.scores.comprehensive, 'comprehensive');
+        
+        var conclusionHtml = '<div class="row">';
+        conclusionHtml += '<div class="col-md-6 mb-3">';
+        conclusionHtml += '<h6 class="text-primary"><i class="fas fa-trophy me-1"></i>综合表现最佳</h6>';
+        conclusionHtml += '<p class="mb-1"><strong>' + best.report_number + '</strong>';
+        if (best.machine_name) {
+            conclusionHtml += ' <span class="text-muted">(' + best.machine_name + ')</span>';
+        }
+        conclusionHtml += '</p>';
+        conclusionHtml += '<p class="mb-0">综合得分: <strong class="text-success">' + convertToPercentage(best.scores.comprehensive, 'comprehensive').toFixed(1) + '</strong> 分</p>';
+        conclusionHtml += '</div>';
+        
+        if (reports.length > 1) {
+            conclusionHtml += '<div class="col-md-6 mb-3">';
+            conclusionHtml += '<h6 class="text-secondary"><i class="fas fa-chart-line me-1"></i>差距分析</h6>';
+            conclusionHtml += '<p class="mb-1">最高分与最低分差距: <strong class="' + (diff > 10 ? 'text-danger' : 'text-success') + '">' + diff.toFixed(1) + '</strong> 分</p>';
+            if (diff > 10) {
+                conclusionHtml += '<p class="mb-0 text-muted"><small>差距较大，建议重点关注低分报告的改进方向。</small></p>';
+            } else {
+                conclusionHtml += '<p class="mb-0 text-muted"><small>差距较小，各报告整体表现较为均衡。</small></p>';
+            }
+            conclusionHtml += '</div>';
+        }
+        
+        var strongDimensions = [];
+        var weakDimensions = [];
+        dimensionKeys.forEach(function(key, idx) {
+            var avg = reports.reduce(function(sum, r) { return sum + convertToPercentage(r.scores[key], key); }, 0) / reports.length;
+            if (avg >= 80) {
+                strongDimensions.push({ name: dimensionNames[idx], avg: avg });
+            } else if (avg < 60) {
+                weakDimensions.push({ name: dimensionNames[idx], avg: avg });
+            }
+        });
+        
+        conclusionHtml += '<div class="col-md-6 mb-3">';
+        if (strongDimensions.length > 0) {
+            conclusionHtml += '<h6 class="text-success"><i class="fas fa-thumbs-up me-1"></i>优势维度</h6>';
+            conclusionHtml += '<p class="mb-0">';
+            strongDimensions.forEach(function(d) {
+                conclusionHtml += '<span class="badge bg-success me-1">' + d.name + ' (' + d.avg.toFixed(1) + ')</span>';
+            });
+            conclusionHtml += '</p>';
+        } else {
+            conclusionHtml += '<h6 class="text-muted"><i class="fas fa-info-circle me-1"></i>优势维度</h6>';
+            conclusionHtml += '<p class="mb-0 text-muted">暂无平均分超过80分的维度</p>';
+        }
+        conclusionHtml += '</div>';
+        
+        conclusionHtml += '<div class="col-md-6 mb-3">';
+        if (weakDimensions.length > 0) {
+            conclusionHtml += '<h6 class="text-danger"><i class="fas fa-exclamation-triangle me-1"></i>待改进维度</h6>';
+            conclusionHtml += '<p class="mb-0">';
+            weakDimensions.forEach(function(d) {
+                conclusionHtml += '<span class="badge bg-danger me-1">' + d.name + ' (' + d.avg.toFixed(1) + ')</span>';
+            });
+            conclusionHtml += '</p>';
+        } else {
+            conclusionHtml += '<h6 class="text-muted"><i class="fas fa-check-circle me-1"></i>待改进维度</h6>';
+            conclusionHtml += '<p class="mb-0 text-muted">各维度平均分均达到60分以上</p>';
+        }
+        conclusionHtml += '</div>';
+        
+        conclusionHtml += '</div>';
+        $('#compareConclusion').html(conclusionHtml);
+    }
+    
+    // 删除报告功能 - 使用事件委托
+    $(document).on('click', '.action-btn.delete', function() {
+        var reportId = $(this).data('report-id');
+        var reportNumber = $(this).data('report-number');
+        
+        if (!confirm('确定要删除报告 "' + reportNumber + '" 吗？\n此操作不可恢复！')) {
+            return;
+        }
+        
+        $.ajax({
+            url: '/reports/api/delete/' + reportId + '/',
+            method: 'POST',
+            headers: {'X-CSRFToken': getCookie('csrftoken')},
+            success: function(response) {
+                if (response.success) {
+                    alert('报告删除成功');
+                    // 移除对应的表格行
+                    $('tr[data-id="' + reportId + '"]').fadeOut(300, function() {
+                        $(this).remove();
+                        // 如果没有报告了，显示空状态
+                        if ($('#reportTable tbody tr').length === 0) {
+                            location.reload();
+                        }
+                    });
+                } else {
+                    alert('删除失败：' + (response.error || '未知错误'));
+                }
+            },
+            error: function(xhr) {
+                var errorMsg = '删除请求失败';
+                if (xhr.responseJSON && xhr.responseJSON.error) {
+                    errorMsg = xhr.responseJSON.error;
+                }
+                alert(errorMsg);
+            }
+        });
+    });
+    
+    function getCookie(name) {
+        var cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            var cookies = document.cookie.split(';');
+            for (var i = 0; i < cookies.length; i++) {
+                var cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+});
+</script>
+{% endblock %}

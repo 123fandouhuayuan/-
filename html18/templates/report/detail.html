@@ -1,0 +1,552 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/report/detail.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="report-content">
+    <div class="report-header">
+        <div class="row align-items-center header-content">
+            <div class="col-lg-7">
+                <nav aria-label="breadcrumb" class="mb-2">
+                    <ol class="breadcrumb mb-0" style="background: transparent; padding: 0;">
+                        <li class="breadcrumb-item"><a href="{% url 'report_list' %}" class="text-white-50"><i class="fas fa-home"></i> 报告列表</a></li>
+                        <li class="breadcrumb-item active text-white">报告详情</li>
+                    </ol>
+                </nav>
+                <h2><i class="fas fa-file-alt"></i>{{ machine.name }}</h2>
+                <div class="meta-info">
+                    <span><i class="fas fa-industry"></i>{{ report.get_machine_type_display }}</span>
+                    <span><i class="fas fa-barcode"></i>{{ machine.machine_number|default:"-" }}</span>
+                    <span><i class="fas fa-file-alt"></i>{{ report.report_number }}</span>
+                    <span><i class="fas fa-tags"></i>{{ machine.model|default:"-" }}</span>
+                    <span><i class="fas fa-building"></i>{{ machine.manufacturer|default:"-" }}</span>
+                    <span><i class="fas fa-calendar-alt"></i>{{ machine.production_date|date:"Y-m"|default:"-" }}</span>
+                </div>
+            </div>
+            <div class="col-lg-5 text-center score-section mt-3 mt-lg-0">
+                <div class="score-circle-container">
+                    <div class="score-circle-bg"></div>
+                    <div class="score-circle">
+                        <span class="score-value">{{ report.comprehensive_score|floatformat:1 }}</span>
+                        <span class="score-label">综合得分</span>
+                    </div>
+                </div>
+                <div class="grade-badge-large grade-{{ grade.level|lower }}">
+                    {{ grade.level }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="action-bar no-print">
+        <div>
+            <a href="{% url 'report_list' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-1"></i>返回列表
+            </a>
+        </div>
+        <div class="btn-group">
+            <button class="btn btn-outline-primary" onclick="handlePrint()">
+                <i class="fas fa-print me-1"></i>打印
+            </button>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-6 mb-4">
+            <div class="section-card h-100">
+                <div class="card-header">
+                    <i class="fas fa-chart-pie icon-chart"></i>
+                    五维评价雷达图
+                </div>
+                <div class="card-body">
+                    <div id="radarChart" class="chart-container"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-6 mb-4">
+            <div class="section-card h-100">
+                <div class="card-header">
+                    <i class="fas fa-chart-bar icon-dimension"></i>
+                    五维得分柱状图
+                </div>
+                <div class="card-body">
+                    <div id="barChart" class="chart-container"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-12 mb-4">
+            <div class="section-card h-100">
+                <div class="card-header">
+                    <i class="fas fa-chart-bar icon-dimension"></i>
+                    维度得分详情
+                </div>
+                <div class="card-body">
+                    <div class="dimension-grid">
+                        <div class="dimension-card precision">
+                            <div class="dimension-header">
+                                <span class="dimension-name">
+                                    <i class="fas fa-crosshairs"></i>
+                                    精度维度
+                                </span>
+                                <span class="dimension-score">{{ report.precision_score|floatformat:1 }}</span>
+                            </div>
+                            <div class="dimension-progress">
+                                <div class="dimension-progress-bar" data-width="{{ report.precision_score }}"></div>
+                            </div>
+                            <div class="dimension-desc">几何精度、定位精度、重复定位精度</div>
+                        </div>
+                        
+                        <div class="dimension-card performance">
+                            <div class="dimension-header">
+                                <span class="dimension-name">
+                                    <i class="fas fa-tachometer-alt"></i>
+                                    性能维度
+                                </span>
+                                <span class="dimension-score">{{ report.performance_score|floatformat:1 }}</span>
+                            </div>
+                            <div class="dimension-progress">
+                                <div class="dimension-progress-bar" data-width="{{ report.performance_score }}" data-max="100"></div>
+                            </div>
+                            <div class="dimension-desc">主轴性能、进给性能、切削能力</div>
+                        </div>
+                        
+                        <div class="dimension-card reliability">
+                            <div class="dimension-header">
+                                <span class="dimension-name">
+                                    <i class="fas fa-shield-alt"></i>
+                                    可靠性维度
+                                </span>
+                                <span class="dimension-score">{{ report.reliability_score|floatformat:1 }}</span>
+                            </div>
+                            <div class="dimension-progress">
+                                <div class="dimension-progress-bar" data-width="{{ report.reliability_score }}" data-max="100"></div>
+                            </div>
+                            <div class="dimension-desc">可靠性设计、可靠性试验、维修性</div>
+                        </div>
+                        
+                        <div class="dimension-card intelligence">
+                            <div class="dimension-header">
+                                <span class="dimension-name">
+                                    <i class="fas fa-brain"></i>
+                                    智能化维度
+                                </span>
+                                <span class="dimension-score">{{ report.intelligence_score|floatformat:1 }}</span>
+                            </div>
+                            <div class="dimension-progress">
+                                <div class="dimension-progress-bar" data-width="{{ report.intelligence_score }}"></div>
+                            </div>
+                            <div class="dimension-desc">感知系统、控制系统、通信接口</div>
+                        </div>
+                        
+                        <div class="dimension-card green">
+                            <div class="dimension-header">
+                                <span class="dimension-name">
+                                    <i class="fas fa-leaf"></i>
+                                    绿色化维度
+                                </span>
+                                <span class="dimension-score">{{ report.green_score|floatformat:1 }}</span>
+                            </div>
+                            <div class="dimension-progress">
+                                <div class="dimension-progress-bar" data-width="{{ report.green_score }}" data-max="100"></div>
+                            </div>
+                            <div class="dimension-desc">能耗效率、环保设计、资源利用</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if recommendations %}
+    <div class="section-card">
+        <div class="card-header">
+            <i class="fas fa-lightbulb icon-recommend"></i>
+            改进建议与结论
+        </div>
+        <div class="card-body">
+            <div class="recommendation-list">
+                {% for rec in recommendations %}
+                <div class="recommendation-item priority-{{ rec.priority }}">
+                    <div class="priority-icon">
+                        {% if rec.priority == 'high' %}
+                        <i class="fas fa-exclamation-triangle"></i>
+                        {% elif rec.priority == 'medium' %}
+                        <i class="fas fa-exclamation-circle"></i>
+                        {% elif rec.priority == 'low' %}
+                        <i class="fas fa-check-circle"></i>
+                        {% else %}
+                        <i class="fas fa-info-circle"></i>
+                        {% endif %}
+                    </div>
+                    <div class="recommendation-content">
+                        <h6>{{ rec.issue }}</h6>
+                        <p>{{ rec.suggestion }}</p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/echarts.min.js' %}"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+var radarDataJson = '{{ radar_data|escapejs }}';
+
+function showLoading(message) {
+    var loader = document.createElement('div');
+    loader.id = 'pdf-loading';
+    loader.innerHTML = '<div style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;"><div style="background:white;padding:2rem;border-radius:1rem;text-align:center;"><div style="border:4px solid #f3f3f3;border-top:4px solid #667eea;border-radius:50%;width:50px;height:50px;animation:spin 1s linear infinite;margin:0 auto 1rem;"></div><div>' + message + '</div></div></div><style>@keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}</style>';
+    document.body.appendChild(loader);
+}
+
+function hideLoading() {
+    var loader = document.getElementById('pdf-loading');
+    if (loader) loader.remove();
+}
+
+function showError(message) {
+    var errorDiv = document.createElement('div');
+    errorDiv.style.cssText = 'position:fixed;top:1rem;left:50%;transform:translateX(-50%);background:#f5576c;color:white;padding:1rem 2rem;border-radius:0.5rem;z-index:10000;box-shadow:0 4px 12px rgba(0,0,0,0.15);';
+    errorDiv.textContent = message;
+    document.body.appendChild(errorDiv);
+    setTimeout(function() { errorDiv.remove(); }, 5000);
+}
+
+async function handlePrint() {
+    var reportContent = document.querySelector('.report-content');
+    if (!reportContent) {
+        window.print();
+        return;
+    }
+    
+    showLoading('正在准备打印内容...');
+    
+    try {
+        var loader = document.getElementById('pdf-loading');
+        var loadingText = loader.querySelector('div > div:last-child');
+        
+        loadingText.textContent = '正在渲染图表...';
+        await new Promise(function(resolve) { setTimeout(resolve, 300); });
+        
+        var actionBar = document.querySelector('.action-bar');
+        var originalDisplay = actionBar ? actionBar.style.display : '';
+        if (actionBar) actionBar.style.display = 'none';
+        
+        var chartImages = [];
+        var chartInstances = [];
+        
+        if (typeof echarts !== 'undefined') {
+            var radarChart = echarts.getInstanceByDom(document.getElementById('radarChart'));
+            var barChart = echarts.getInstanceByDom(document.getElementById('barChart'));
+            
+            if (radarChart) {
+                chartInstances.push({ id: 'radarChart', chart: radarChart });
+            }
+            if (barChart) {
+                chartInstances.push({ id: 'barChart', chart: barChart });
+            }
+        }
+        
+        for (var c = 0; c < chartInstances.length; c++) {
+            var item = chartInstances[c];
+            var imgData = item.chart.getDataURL({
+                type: 'png',
+                pixelRatio: 2,
+                backgroundColor: '#ffffff'
+            });
+            chartImages.push({ id: item.id, imgData: imgData });
+        }
+        
+        loadingText.textContent = '正在捕获页面内容...';
+        await new Promise(function(resolve) { setTimeout(resolve, 300); });
+        
+        var opt = {
+            scale: 2,
+            useCORS: true,
+            allowTaint: true,
+            logging: false,
+            backgroundColor: '#ffffff'
+        };
+        
+        var tempDiv = reportContent.cloneNode(true);
+        document.body.appendChild(tempDiv);
+        tempDiv.style.position = 'absolute';
+        tempDiv.style.left = '-9999px';
+        tempDiv.style.top = '0';
+        tempDiv.style.width = reportContent.offsetWidth + 'px';
+        tempDiv.style.background = '#ffffff';
+        
+        for (var m = 0; m < chartImages.length; m++) {
+            var chartImg = chartImages[m];
+            var chartContainer = tempDiv.querySelector('#' + chartImg.id);
+            if (chartContainer) {
+                chartContainer.innerHTML = '<img src="' + chartImg.imgData + '" style="width:100%;height:100%;" />';
+            }
+        }
+        
+        var canvas = await html2canvas(tempDiv, opt);
+        document.body.removeChild(tempDiv);
+        if (actionBar) actionBar.style.display = originalDisplay;
+        
+        loadingText.textContent = '正在生成PDF...';
+        await new Promise(function(resolve) { setTimeout(resolve, 300); });
+        
+        var imgData = canvas.toDataURL('image/png', 1.0);
+        var pdf = new jspdf.jsPDF({
+            orientation: canvas.width > canvas.height ? 'landscape' : 'portrait',
+            unit: 'px',
+            format: [canvas.width, canvas.height]
+        });
+        
+        pdf.internal.scaleFactor = 1;
+        var pageWidth = pdf.internal.pageSize.getWidth();
+        var pageHeight = pdf.internal.pageSize.getHeight();
+        var imgWidth = canvas.width;
+        var imgHeight = canvas.height;
+        var ratio = Math.min(pageWidth / imgWidth, pageHeight / imgHeight);
+        var scaledWidth = imgWidth * ratio;
+        var scaledHeight = imgHeight * ratio;
+        var x = (pageWidth - scaledWidth) / 2;
+        var y = (pageHeight - scaledHeight) / 2;
+        
+        pdf.addImage(imgData, 'PNG', x, y, scaledWidth, scaledHeight);
+        
+        loadingText.textContent = '正在打开打印预览...';
+        await new Promise(function(resolve) { setTimeout(resolve, 300); });
+        
+        hideLoading();
+        pdf.autoPrint();
+        window.open(pdf.output('bloburl'), '_blank');
+        
+    } catch (error) {
+        if (actionBar) actionBar.style.display = originalDisplay;
+        hideLoading();
+        showError('打印准备失败: ' + error.message);
+        setTimeout(function() { window.print(); }, 1000);
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    var radarDataFromDjango = radarDataJson && radarDataJson !== 'None' ? JSON.parse(radarDataJson) : null;
+    
+    var radarChart = echarts.init(document.getElementById('radarChart'));
+    
+    var radarData = { labels: [], values: [0, 0, 0, 0, 0], max: 100 };
+    if (radarDataFromDjango && radarDataFromDjango.values) {
+        radarData.values = radarDataFromDjango.values;
+        radarData.labels = radarDataFromDjango.labels || radarData.labels;
+    }
+    
+    var radarValues = radarData.values || [0, 0, 0, 0, 0];
+    
+    // [FIX] 所有维度分数现在都是百分制，直接使用，无需转换
+    // 精度 (索引 0)、性能 (索引 1)、可靠性 (索引 2)、智能化 (索引 3)、绿色化 (索引 4) 均为百分制
+    var normalizedValues = radarValues.map(function(value, index) {
+        // 所有维度：直接使用百分制分数
+        return value;
+    });
+    
+    document.querySelectorAll('.dimension-progress-bar').forEach(function(bar) {
+        var width = parseFloat(bar.getAttribute('data-width'));
+        var maxScore = parseFloat(bar.getAttribute('data-max')) || 100;
+        if (!isNaN(width)) {
+            var percentage = (width / maxScore) * 100;
+            bar.style.width = Math.min(percentage, 100) + '%';
+        }
+    });
+    
+    // [FIX] 所有维度分数现在都是百分制，直接使用，无需转换
+    var dimensionCards = document.querySelectorAll('.dimension-card');
+    dimensionCards.forEach(function(card, index) {
+        var scoreElement = card.querySelector('.dimension-score');
+        var progressBar = card.querySelector('.dimension-progress-bar');
+        
+        if (scoreElement && progressBar) {
+            var rawScore = parseFloat(progressBar.getAttribute('data-width')) || 0;
+            var maxScore = parseFloat(progressBar.getAttribute('data-max')) || 100;
+            
+            // 所有维度：直接使用百分制分数，无需转换
+            // 更新进度条宽度
+            var percentage = (rawScore / 100) * 100;
+            progressBar.style.width = Math.min(percentage, 100) + '%';
+        }
+    });
+    
+    var option = {
+        tooltip: {
+            trigger: 'item',
+            backgroundColor: 'rgba(255,255,255,0.95)',
+            borderColor: '#e2e8f0',
+            borderWidth: 1,
+            textStyle: { color: '#4a5568' },
+            formatter: function(params) {
+                var dimensionNames = ['精度', '性能', '可靠性', '智能化', '绿色化'];
+                var values = params.value;
+                var result = '<strong>' + params.name + '</strong><br/>';
+                for (var i = 0; i < dimensionNames.length; i++) {
+                    result += dimensionNames[i] + ': ' + values[i].toFixed(2) + ' 分<br/>';
+                }
+                return result;
+            }
+        },
+        radar: {
+            indicator: [
+                { name: '精度', max: 100 },
+                { name: '性能', max: 100 },
+                { name: '可靠性', max: 100 },
+                { name: '智能化', max: 100 },
+                { name: '绿色化', max: 100 }
+            ],
+            center: ['50%', '50%'],
+            radius: '70%',
+            axisName: {
+                color: '#4a5568',
+                fontSize: 13,
+                fontWeight: 500
+            },
+            splitArea: {
+                areaStyle: {
+                    color: ['rgba(102, 126, 234, 0.02)', 'rgba(102, 126, 234, 0.05)', 
+                            'rgba(102, 126, 234, 0.08)', 'rgba(102, 126, 234, 0.11)', 
+                            'rgba(102, 126, 234, 0.14)']
+                }
+            },
+            axisLine: {
+                lineStyle: { color: 'rgba(102, 126, 234, 0.2)' }
+            },
+            splitLine: {
+                lineStyle: { color: 'rgba(102, 126, 234, 0.15)' }
+            }
+        },
+        series: [{
+            type: 'radar',
+            data: [{
+                value: normalizedValues,
+                name: '评价得分',
+                symbol: 'circle',
+                symbolSize: 8,
+                lineStyle: {
+                    width: 3,
+                    color: {
+                        type: 'linear',
+                        x: 0,
+                        y: 0,
+                        x2: 0,
+                        y2: 1,
+                        colorStops: [
+                            {offset: 0, color: '#667eea'},
+                            {offset: 1, color: '#764ba2'}
+                        ]
+                    }
+                },
+                areaStyle: {
+                    color: {
+                        type: 'radial',
+                        x: 0.5,
+                        y: 0.5,
+                        r: 1,
+                        colorStops: [
+                            {offset: 0, color: 'rgba(102, 126, 234, 0.4)'},
+                            {offset: 1, color: 'rgba(118, 75, 162, 0.1)'}
+                        ]
+                    }
+                },
+                itemStyle: {
+                    color: '#667eea',
+                    borderColor: '#fff',
+                    borderWidth: 2
+                }
+            }]
+        }]
+    };
+    
+    radarChart.setOption(option);
+    
+    var barChart = echarts.init(document.getElementById('barChart'));
+    
+    var barOption = {
+        tooltip: {
+            trigger: 'axis',
+            backgroundColor: 'rgba(255,255,255,0.95)',
+            borderColor: '#e2e8f0',
+            borderWidth: 1,
+            textStyle: { color: '#4a5568' },
+            formatter: function(params) {
+                return params[0].name + '<br/>' + params[0].seriesName + ': ' + params[0].value.toFixed(2) + ' (百分制)';
+            }
+        },
+        grid: {
+            left: '3%',
+            right: '4%',
+            bottom: '3%',
+            containLabel: true
+        },
+        xAxis: {
+            type: 'category',
+            data: ['精度', '性能', '可靠性', '智能化', '绿色化'],
+            axisLine: { lineStyle: { color: '#e2e8f0' } },
+            axisLabel: { color: '#4a5568', fontSize: 12 }
+        },
+        yAxis: {
+            type: 'value',
+            max: 100,
+            axisLine: { lineStyle: { color: '#e2e8f0' } },
+            axisLabel: { 
+                color: '#4a5568',
+                formatter: function(value) {
+                    return value.toFixed(0);
+                }
+            },
+            splitLine: { lineStyle: { color: '#e2e8f0', type: 'dashed' } }
+        },
+        series: [{
+            name: '得分',
+            type: 'bar',
+            data: normalizedValues,
+            itemStyle: {
+                color: function(params) {
+                    var colors = ['#667eea', '#11998e', '#f5576c', '#4facfe', '#38ef7d'];
+                    return colors[params.dataIndex % colors.length];
+                },
+                borderRadius: [4, 4, 0, 0]
+            },
+            label: {
+                show: true,
+                position: 'top',
+                formatter: function(params) {
+                    return params.value.toFixed(2);
+                },
+                fontSize: 12,
+                color: '#333'
+            },
+            barWidth: '50%'
+        }]
+    };
+    
+    barChart.setOption(barOption);
+    
+    window.addEventListener('resize', function() {
+        radarChart.resize();
+        barChart.resize();
+    });
+});
+</script>
+</div>
+{% endblock %}

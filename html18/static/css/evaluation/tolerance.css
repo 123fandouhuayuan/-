@@ -1,0 +1,367 @@
+.tolerance-table {
+    overflow-x: auto;
+    position: relative;
+    max-height: 700px;
+}
+
+.tolerance-table table {
+    border-collapse: separate;
+    border-spacing: 0;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    width: 100%;
+    table-layout: fixed;
+}
+
+.tolerance-table th {
+    background-color: #007bff;
+    color: white;
+    font-weight: 700;
+    font-size: 14px;
+    padding: 14px 16px;
+    text-align: center;
+    border-bottom: 2px solid #0056b3;
+    vertical-align: middle;
+    white-space: nowrap;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.tolerance-table th:first-child {
+    width: 40%;
+    min-width: 300px;
+}
+
+.tolerance-table th:nth-child(2) {
+    width: 20%;
+    min-width: 150px;
+}
+
+.tolerance-table th:nth-child(3) {
+    width: 30%;
+    min-width: 200px;
+}
+
+.tolerance-table th:nth-child(4) {
+    width: 10%;
+    min-width: 80px;
+}
+
+.tolerance-table td {
+    padding: 12px 16px;
+    border-bottom: 1px solid #e9ecef;
+    vertical-align: middle;
+    box-sizing: border-box;
+    word-wrap: break-word;
+}
+
+.tolerance-table tbody tr td:nth-child(3) {
+    text-align: left;
+}
+
+.tolerance-table tbody tr td:nth-child(3) .tolerance-value,
+.tolerance-table tbody tr td:nth-child(3) .tolerance-edit {
+    text-align: left;
+}
+
+.tolerance-table tbody tr:nth-child(even) {
+    background-color: #f8f9fa;
+}
+
+.tolerance-table tbody tr:hover {
+    background-color: #e3f2fd;
+}
+
+.tolerance-edit input.form-control {
+    border: 2px solid #007bff;
+    border-radius: 4px;
+    padding: 6px 12px;
+    font-size: 14px;
+    transition: all 0.3s ease;
+    width: 100%;
+    margin: 0;
+    box-sizing: border-box;
+}
+
+.tolerance-edit input.form-control:focus {
+    border-color: #0056b3;
+    box-shadow: 0 0 0 0.2rem rgba(0,123,255,0.25);
+    outline: none;
+}
+
+.tolerance-edit input.form-control.is-invalid {
+    border-color: #dc3545;
+}
+
+.tolerance-edit input.form-control.is-valid {
+    border-color: #28a745;
+}
+
+.tolerance-value {
+    font-weight: 500;
+    color: #343a40;
+    margin-top: 0;
+}
+
+.tolerance-value table {
+    margin-top: 0;
+}
+
+.tolerance-value td {
+    padding-top: 4px;
+    padding-bottom: 4px;
+}
+
+.edit-btn,
+.save-btn,
+.cancel-btn {
+    border-radius: 4px;
+    font-size: 12px;
+    padding: 4px 12px;
+    margin-right: 4px;
+    transition: all 0.3s ease;
+}
+
+.edit-btn:hover {
+    background-color: #0069d9;
+    border-color: #0062cc;
+}
+
+.save-btn:hover {
+    background-color: #218838;
+    border-color: #1e7e34;
+}
+
+.cancel-btn:hover {
+    background-color: #6c757d;
+    border-color: #5a6268;
+}
+
+.precision-type-btn {
+    background-color: #ffffff;
+    border: 2px solid #e0e0e0;
+    color: #333333;
+    font-size: 15px;
+    font-weight: 500;
+    padding: 12px 16px;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    box-shadow: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 50px;
+    width: 100%;
+}
+
+.precision-type-btn:hover {
+    background-color: #f8f9fa;
+    border-color: #007bff;
+    color: #007bff;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 123, 255, 0.15);
+}
+
+.precision-type-btn.active {
+    background-color: #007bff;
+    border-color: #007bff;
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+}
+
+.precision-type-btn:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+}
+
+.precision-type-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(0, 123, 255, 0.2);
+}
+
+.precision-type-btn:disabled {
+    background-color: #f5f5f5;
+    border-color: #e0e0e0;
+    color: #999999;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+#precision-type-section .row {
+    gap: 12px;
+}
+
+#precision-type-section .col-md-4 {
+    padding-left: 0;
+    padding-right: 0;
+    flex: 1;
+}
+
+.editing {
+    background-color: #fff3cd !important;
+    border-left: 4px solid #ffc107;
+}
+
+.tolerance-spec,
+.tolerance-value,
+.tolerance-edit {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+}
+
+.tolerance-spec table,
+.tolerance-value table,
+.tolerance-edit table {
+    border-collapse: collapse;
+    width: 100%;
+    font-size: 14px;
+    line-height: 1.4;
+    margin: 0;
+    padding: 0;
+}
+
+.tolerance-spec td,
+.tolerance-value td,
+.tolerance-edit td {
+    border: 0 !important;
+    padding: 4px 0;
+    text-align: left;
+    margin: 0;
+    box-sizing: border-box;
+    height: 20px;
+    line-height: 20px;
+    vertical-align: middle;
+}
+
+#precision-type-section .col-md-4 {
+    margin-bottom: 8px;
+}
+
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+.loading-spinner {
+    background-color: white;
+    padding: 30px;
+    border-radius: 10px;
+    text-align: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.loading-text {
+    margin-top: 15px;
+    font-size: 16px;
+    color: #333;
+    font-weight: 500;
+}
+
+.hidden {
+    display: none !important;
+}
+
+.top-20 {
+    top: 20px;
+}
+
+.right-20 {
+    right: 20px;
+}
+
+.z-50 {
+    z-index: 50;
+}
+
+.alert {
+    width: 100%;
+    max-width: none;
+}
+
+.alert .close {
+    cursor: pointer;
+}
+
+@media (max-width: 768px) {
+    .tolerance-table {
+        font-size: 14px;
+    }
+    
+    .tolerance-table th,
+    .tolerance-table td {
+        padding: 8px 12px;
+    }
+    
+    .tolerance-table th {
+        font-size: 13px;
+    }
+    
+    .precision-type-btn {
+        font-size: 14px;
+        padding: 10px 14px;
+        min-height: 45px;
+    }
+    
+    #precision-type-section .row {
+        gap: 10px;
+    }
+    
+    .loading-spinner {
+        padding: 20px;
+    }
+    
+    .loading-text {
+        font-size: 14px;
+    }
+}
+
+@media (max-width: 576px) {
+    .tolerance-table {
+        font-size: 12px;
+    }
+    
+    .tolerance-table th,
+    .tolerance-table td {
+        padding: 6px 8px;
+    }
+    
+    .tolerance-table th {
+        font-size: 11px;
+    }
+    
+    .precision-type-btn {
+        font-size: 13px;
+        padding: 8px 12px;
+        min-height: 42px;
+        border-radius: 6px;
+    }
+    
+    #precision-type-section .row {
+        gap: 8px;
+    }
+    
+    #precision-type-section .col-md-4 {
+        margin-bottom: 8px;
+    }
+    
+    .loading-spinner {
+        padding: 15px;
+    }
+    
+    .loading-text {
+        font-size: 12px;
+    }
+}

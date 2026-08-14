@@ -1,0 +1,400 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block page_title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+    <div id="user-role-data" style="display:none;" data-is-admin="{% if is_admin %}true{% else %}false{% endif %}"></div>
+    <div class="row">
+    <div class="col-md-12">
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0"><i class="fas fa-chart-line mr-2"></i>精度综合权重分析图表</h5>
+                    <div class="d-flex align-items-center">
+                        <label for="machine-type-select" class="mb-0 mr-2">机床类型：</label>
+                        <select id="machine-type-select" class="form-control form-control-sm" style="width: 200px;">
+                            <option value="machining_center">加工中心</option>
+                            <option value="boring_milling_machine">镗铣床</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <div id="loading-indicator" class="text-center py-5" style="display: none;">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="sr-only">加载中...</span>
+                    </div>
+                    <p class="mt-3 text-muted">正在加载数据，请稍候...</p>
+                </div>
+                <div id="chart-container" style="height: 500px; width: 100%;"></div>
+                <div id="no-data-message" class="alert alert-warning text-center py-5" style="display: none;">
+                    <i class="fas fa-exclamation-triangle fa-3x mb-3"></i>
+                    <h5 class="mb-3">暂无数据</h5>
+                    <p class="mb-0">当前选择的机床类型暂无数据，请选择其他类型或添加数据。</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card mb-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="card-title mb-0"><i class="fas fa-info-circle mr-2"></i>数据统计</h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-md-3 mb-3">
+                        <div class="border rounded p-3">
+                            <h6 class="text-muted mb-2">机床总数</h6>
+                            <h3 class="mb-0" id="total-machines">0</h3>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="border rounded p-3">
+                            <h6 class="text-muted mb-2">平均得分</h6>
+                            <h3 class="mb-0" id="average-score">0</h3>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="border rounded p-3">
+                            <h6 class="text-muted mb-2">最高得分</h6>
+                            <h3 class="mb-0 text-success" id="max-score">0</h3>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="border rounded p-3">
+                            <h6 class="text-muted mb-2">最低得分</h6>
+                            <h3 class="mb-0 text-danger" id="min-score">0</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+<script>
+    let chartInstance = null;
+    let currentData = [];
+
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('Charts page loaded');
+        initializeChart();
+        setupEventListeners();
+        loadChartData('machining_center');
+    });
+
+    function initializeChart() {
+        const chartDom = document.getElementById('chart-container');
+        chartInstance = echarts.init(chartDom);
+        
+        const option = {
+            title: {
+                text: '精度部分机床综合得分分析',
+                left: 'center',
+                top: 20,
+                textStyle: {
+                    fontSize: 18,
+                    fontWeight: 'bold'
+                }
+            },
+            tooltip: {
+                trigger: 'axis',
+                axisPointer: {
+                    type: 'cross'
+                },
+                formatter: function(params) {
+                    let result = '<div style="padding: 10px;">';
+                    params.forEach(function(item) {
+                        if (item.seriesName === '柱状图') {
+                            result += `
+                                <div style="margin-bottom: 5px;">
+                                    <strong>${item.marker}${item.seriesName}</strong><br/>
+                                    报告编号：${item.data.report_number}<br/>
+                                    机床型号：${item.data.machine_model}<br/>
+                                    综合得分：<strong style="color: #28a745;">${item.data.comprehensive_score.toFixed(2)}</strong>分<br/>
+                                    总权重：${item.data.total_weight.toFixed(4)}<br/>
+                                    计算时间：${item.data.calculated_at}<br/>
+                                    版本号：${item.data.version}
+                                </div>
+                            `;
+                        } else if (item.seriesName === '趋势线') {
+                            result += `
+                                <div style="margin-bottom: 5px;">
+                                    <strong>${item.marker}${item.seriesName}</strong><br/>
+                                    得分：<strong style="color: #dc3545;">${item.value.toFixed(2)}</strong>分
+                                </div>
+                            `;
+                        }
+                    });
+                    result += '</div>';
+                    return result;
+                }
+            },
+            legend: {
+                data: ['柱状图', '趋势线'],
+                top: 60,
+                left: 'center'
+            },
+            grid: {
+                left: '60px',
+                right: '40px',
+                bottom: '60px',
+                top: '80px',
+                containLabel: false
+            },
+            toolbox: {
+                feature: {
+                    restore: {
+                        title: '重置'
+                    },
+                    saveAsImage: {
+                        title: '保存图片'
+                    },
+                    dataView: {
+                        title: '数据视图',
+                        readOnly: true
+                    }
+                },
+                right: 20,
+                top: 20
+            },
+            xAxis: {
+                type: 'category',
+                data: [],
+                name: '机床编号',
+                nameLocation: 'middle',
+                nameGap: 30,
+                axisLabel: {
+                    rotate: 45,
+                    interval: 0,
+                    fontSize: 10
+                },
+                axisLine: {
+                    lineStyle: {
+                        color: '#333'
+                    }
+                },
+                axisTick: {
+                    alignWithLabel: true
+                }
+            },
+            yAxis: [
+                {
+                    type: 'value',
+                    name: '综合得分',
+                    position: 'left',
+                    axisLabel: {
+                        formatter: '{value}分'
+                    },
+                    axisLine: {
+                        show: true,
+                        lineStyle: {
+                            color: '#333'
+                        }
+                    },
+                    splitLine: {
+                        show: true,
+                        lineStyle: {
+                            type: 'dashed'
+                        }
+                    },
+                    min: function(value) {
+                        return Math.max(0, value.min - 10);
+                    },
+                    max: function(value) {
+                        return Math.min(100, value.max + 10);
+                    }
+                }
+            ],
+            series: [
+                {
+                    name: '柱状图',
+                    type: 'bar',
+                    data: [],
+                    itemStyle: {
+                        color: function(params) {
+                            const colors = ['#5470c6', '#91cc75', '#fac858', '#ee6666', '#73c0de', '#3ba272', '#fc8452', '#9a60b4', '#ea7ccc'];
+                            return colors[params.dataIndex % colors.length];
+                        },
+                        borderRadius: [4, 4, 0, 0]
+                    },
+                    label: {
+                        show: true,
+                        position: 'top',
+                        formatter: '{c}',
+                        fontSize: 10,
+                        color: '#333'
+                    },
+                    emphasis: {
+                        itemStyle: {
+                            color: '#28a745',
+                            shadowBlur: 10,
+                            shadowColor: 'rgba(40, 167, 69, 0.5)'
+                        }
+                    }
+                },
+                {
+                    name: '趋势线',
+                    type: 'line',
+                    data: [],
+                    smooth: true,
+                    lineStyle: {
+                        color: '#dc3545',
+                        width: 3,
+                        type: 'solid'
+                    },
+                    itemStyle: {
+                        color: '#dc3545'
+                    },
+                    symbol: 'circle',
+                    symbolSize: 8,
+                    emphasis: {
+                        itemStyle: {
+                            color: '#dc3545',
+                            borderColor: '#fff',
+                            borderWidth: 2,
+                            shadowBlur: 10,
+                            shadowColor: 'rgba(220, 53, 69, 0.5)'
+                        }
+                    },
+                    label: {
+                        show: false
+                    }
+                }
+            ]
+        };
+        
+        chartInstance.setOption(option);
+    }
+
+    function setupEventListeners() {
+        const machineTypeSelect = document.getElementById('machine-type-select');
+        
+        machineTypeSelect.addEventListener('change', function(e) {
+            console.log('Machine type changed:', e.target.value);
+            loadChartData(e.target.value);
+        });
+        
+        window.addEventListener('resize', function() {
+            if (chartInstance) {
+                chartInstance.resize();
+            }
+        });
+    }
+
+    async function loadChartData(machineType) {
+        showLoading(true);
+        
+        try {
+            let data = [];
+            
+            // 所有用户统一从数据库获取数据
+            console.log('从数据库获取数据');
+            
+            const response = await fetch(`/visualization/api/comprehensive-weight-chart-data/?machine_type=${machineType}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                data = result.data;
+            }
+            
+            if (data.length > 0) {
+                currentData = data;
+                updateChart(data);
+                updateStatistics(data);
+                showChart(true);
+                showNoData(false);
+            } else {
+                showChart(false);
+                showNoData(true);
+                updateStatistics([]);
+            }
+            
+        } catch (error) {
+            console.error('Failed to load chart data:', error);
+            alert('加载数据失败，请稍后重试');
+            showChart(false);
+            showNoData(true);
+        } finally {
+            showLoading(false);
+        }
+    }
+
+    function updateChart(data) {
+        const xAxisData = data.map(item => item.report_number || '');
+        const barData = data.map(item => ({
+            value: item.comprehensive_score || item.total_score || 0,
+            report_number: item.report_number || '',
+            machine_model: item.machine_model || item.machine_name || '',
+            comprehensive_score: item.comprehensive_score || item.total_score || 0,
+            total_weight: item.total_weight || 0,
+            calculated_at: item.calculated_at || item.timestamp || '',
+            version: item.version || 1
+        }));
+        
+        const lineData = data.map(item => item.comprehensive_score || item.total_score || 0);
+        
+        const minScore = Math.min(...data.map(item => item.comprehensive_score || item.total_score || 0));
+        const maxScore = Math.max(...data.map(item => item.comprehensive_score || item.total_score || 0));
+        
+        const option = chartInstance.getOption();
+        option.xAxis.data = xAxisData;
+        option.series[0].data = barData;
+        option.series[1].data = lineData;
+        option.yAxis[0].min = Math.max(0, minScore - 10);
+        option.yAxis[0].max = Math.min(100, maxScore + 10);
+        
+        chartInstance.setOption(option);
+    }
+
+    function updateStatistics(data) {
+        if (data.length === 0) {
+            document.getElementById('total-machines').textContent = '0';
+            document.getElementById('average-score').textContent = '0';
+            document.getElementById('max-score').textContent = '0';
+            document.getElementById('min-score').textContent = '0';
+            return;
+        }
+        
+        const scores = data.map(item => item.comprehensive_score || item.total_score || 0);
+        const total = scores.length;
+        const average = scores.reduce((sum, score) => sum + score, 0) / total;
+        const max = Math.max(...scores);
+        const min = Math.min(...scores);
+        
+        document.getElementById('total-machines').textContent = total;
+        document.getElementById('average-score').textContent = average.toFixed(2);
+        document.getElementById('max-score').textContent = max.toFixed(2);
+        document.getElementById('min-score').textContent = min.toFixed(2);
+    }
+
+    function showLoading(show) {
+        document.getElementById('loading-indicator').style.display = show ? 'block' : 'none';
+    }
+
+    function showChart(show) {
+        const container = document.getElementById('chart-container');
+        container.style.display = show ? 'block' : 'none';
+        
+        if (show && chartInstance) {
+            setTimeout(() => {
+                chartInstance.resize();
+            }, 100);
+        }
+    }
+
+    function showNoData(show) {
+        document.getElementById('no-data-message').style.display = show ? 'block' : 'none';
+    }
+</script>
+{% endblock %}

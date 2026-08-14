@@ -1,0 +1,13 @@
+[data-module="precision"] .indicator-item.level-1-item .indicator-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.precision-data-entry .table th {
+    background-color: #f0f4ff;
+}
+
+.precision-calculation-result {
+    border-left: 3px solid #667eea;
+    padding-left: 10px;
+}

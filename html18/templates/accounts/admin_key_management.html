@@ -1,0 +1,138 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fas fa-key"></i> 管理员密钥管理</h5>
+                </div>
+                <div class="card-body">
+                    <!-- 生成新密钥表单 -->
+                    <div class="card mb-4">
+                        <div class="card-header bg-primary text-white">
+                            <h6 class="mb-0">生成新密钥</h6>
+                        </div>
+                        <div class="card-body">
+                            <form method="POST">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="generate">
+                                
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="max_uses" class="form-label">最大使用次数</label>
+                                            <input type="number" class="form-control" id="max_uses" name="max_uses" 
+                                                   placeholder="留空表示无限制" min="1">
+                                            <div class="form-text">留空表示无限制使用次数</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="expires_days" class="form-label">有效天数</label>
+                                            <input type="number" class="form-control" id="expires_days" name="expires_days" 
+                                                   placeholder="留空表示永不过期" min="1">
+                                            <div class="form-text">留空表示永不过期</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="description" class="form-label">密钥描述</label>
+                                    <textarea class="form-control" id="description" name="description" rows="2"
+                                              placeholder="请输入密钥用途说明"></textarea>
+                                    <div class="form-text">可选。用于说明密钥的用途</div>
+                                </div>
+                                
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-plus"></i> 生成新密钥
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    
+                    <!-- 密钥列表 -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="mb-0">密钥列表</h6>
+                        </div>
+                        <div class="card-body">
+                            {% if keys %}
+                            <div class="table-responsive">
+                                <table class="table table-striped table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>密钥</th>
+                                            <th>状态</th>
+                                            <th>描述</th>
+                                            <th>使用次数</th>
+                                            <th>最大使用次数</th>
+                                            <th>过期时间</th>
+                                            <th>创建者</th>
+                                            <th>创建时间</th>
+                                            <th>操作</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for key in keys %}
+                                        <tr>
+                                            <td><code>{{ key.key }}</code></td>
+                                            <td>
+                                                {% if key.status == 'active' %}
+                                                    <span class="badge bg-success">有效</span>
+                                                {% elif key.status == 'expired' %}
+                                                    <span class="badge bg-warning">已失效</span>
+                                                {% elif key.status == 'revoked' %}
+                                                    <span class="badge bg-danger">已撤销</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>{{ key.description|default:"-" }}</td>
+                                            <td>{{ key.used_count }}</td>
+                                            <td>{{ key.max_uses|default:"无限制" }}</td>
+                                            <td>{{ key.expires_at|date:"Y-m-d H:i"|default:"永不过期" }}</td>
+                                            <td>{{ key.created_by.username|default:"-" }}</td>
+                                            <td>{{ key.created_at|date:"Y-m-d H:i" }}</td>
+                                            <td>
+                                                {% if key.status == 'active' %}
+                                                <form method="POST" style="display: inline;">
+                                                    {% csrf_token %}
+                                                    <input type="hidden" name="action" value="revoke">
+                                                    <input type="hidden" name="key_id" value="{{ key.id }}">
+                                                    <button type="submit" class="btn btn-sm btn-warning" 
+                                                            onclick="return confirm('确定要撤销此密钥吗？')">
+                                                        <i class="fas fa-ban"></i> 撤销
+                                                    </button>
+                                                </form>
+                                                {% endif %}
+                                                <form method="POST" style="display: inline;">
+                                                    {% csrf_token %}
+                                                    <input type="hidden" name="action" value="delete">
+                                                    <input type="hidden" name="key_id" value="{{ key.id }}">
+                                                    <button type="submit" class="btn btn-sm btn-danger" 
+                                                            onclick="return confirm('确定要删除此密钥吗？此操作不可恢复！')">
+                                                        <i class="fas fa-trash"></i> 删除
+                                                    </button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            {% else %}
+                            <div class="text-center py-4">
+                                <p class="text-muted">暂无管理员密钥</p>
+                                <p class="text-muted small">点击上方"生成新密钥"按钮创建第一个密钥</p>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

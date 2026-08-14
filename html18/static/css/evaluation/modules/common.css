@@ -1,0 +1,319 @@
+.sidebar {
+    width: 15%;
+    background-color: #ffffff;
+    overflow-y: auto;
+    position: fixed;
+    left: 0;
+    top: 56px;
+    bottom: 0;
+    z-index: 1000;
+}
+
+.sidebar-bottom-buttons {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 15%;
+    background-color: #ffffff;
+    padding: 15px;
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    border-top: 1px solid #e0e0e0;
+    box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
+    z-index: 1001;
+}
+
+.sidebar-bottom-buttons button {
+    flex: 1;
+    font-size: 14px;
+    padding: 8px 12px;
+    white-space: nowrap;
+}
+
+.content-area {
+    width: 85%;
+    margin-left: 15%;
+    min-height: calc(100vh - 112px);
+    padding: 0;
+    position: relative;
+}
+
+.path-info {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 5px;
+    margin-bottom: 5px;
+}
+
+.card {
+    margin-top: 0;
+    padding: 5px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.card-body {
+    padding: 0.5rem;
+}
+
+.table-responsive {
+    margin-bottom: 0.5rem;
+    width: 100%;
+}
+
+.table {
+    margin-bottom: 0.5rem;
+    color: #212529;
+    width: 100%;
+}
+
+table th,
+table td {
+    vertical-align: middle !important;
+    text-align: center;
+}
+
+table input[type="number"] {
+    vertical-align: middle;
+    margin: 0;
+}
+
+.path-info h3 {
+    color: #667eea;
+    margin-bottom: 10px;
+}
+
+.welcome-message {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 40px;
+    text-align: center;
+}
+
+.welcome-message h3 {
+    color: #667eea;
+    margin-bottom: 15px;
+}
+
+.evaluation-form {
+    margin-top: 20px;
+    padding: 20px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.indicator-hierarchy {
+    font-family: 'Microsoft YaHei', Arial, sans-serif;
+    padding: 15px 10px;
+}
+
+.indicator-item {
+    margin-bottom: 5px;
+}
+
+.indicator-header {
+    padding: 6px 8px;
+    border-radius: 3px;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: all 0.3s ease;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    min-height: 32px;
+}
+
+.indicator-header:hover {
+    transform: translateX(2px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+}
+
+.indicator-title {
+    font-weight: normal;
+    font-size: 12px;
+    text-align: left;
+    flex: 1;
+    white-space: nowrap;
+    overflow: visible;
+    text-overflow: ellipsis;
+}
+
+.indicator-item.level-1-item .indicator-title {
+    text-align: left;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.indicator-item.level-2-item .indicator-title {
+    font-weight: 600;
+}
+
+.expand-icon {
+    font-weight: bold;
+    font-size: 16px;
+    transition: transform 0.3s ease;
+    flex-shrink: 0;
+    margin-left: 5px;
+    width: 16px;
+    text-align: center;
+}
+
+.expand-icon-placeholder {
+    flex-shrink: 0;
+    margin-left: 5px;
+    width: 16px;
+    text-align: center;
+    visibility: hidden;
+}
+
+.indicator-item.expanded > .indicator-header > .expand-icon {
+    transform: rotate(45deg);
+}
+
+.circle-icon {
+    width: 12px;
+    height: 12px;
+    border: 2px solid #333;
+    border-radius: 50%;
+    display: inline-block;
+    flex-shrink: 0;
+    margin-left: 5px;
+    cursor: default;
+    position: relative;
+    transition: all 0.3s ease;
+    pointer-events: none;
+}
+
+.circle-icon.checked {
+    background-color: #28a745;
+    border-color: #28a745;
+}
+
+.circle-icon.checked::after {
+    content: '✓';
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -55%);
+    color: white;
+    font-size: 9px;
+    font-weight: bold;
+    line-height: 1;
+    z-index: 10;
+}
+
+.indicator-content {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.5s ease-out;
+    padding-left: 10px;
+}
+
+.level-3-content > .level-4.horizontal {
+    padding-left: 0;
+}
+
+.indicator-item.expanded > .indicator-content {
+    max-height: 5000px;
+    transition: max-height 0.8s ease-in;
+}
+
+.indicator-item.level-1-item .indicator-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.indicator-item.level-2-item .indicator-header {
+    background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+    color: #333;
+}
+
+.indicator-item.level-3-item .indicator-header {
+    background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+    color: #333;
+    overflow: visible;
+}
+
+.indicator-item.level-4-item .indicator-header {
+    background: linear-gradient(135deg, #d4fc79 0%, #96e6a1 100%);
+    color: #333;
+    padding: 8px 16px;
+}
+
+.indicator-item.level-4-item .indicator-title {
+    font-size: 14px;
+    font-weight: 500;
+}
+
+td {
+    font-weight: bold;
+    text-align: center;
+    font-size: 1rem;
+}
+
+th {
+    text-align: center;
+    font-size: 1.05rem;
+    min-width: 50px;
+}
+
+input[type="number"] {
+    width: 100% !important;
+    height: 100% !important;
+    margin: 0 !important;
+    padding: 0.25rem !important;
+    display: block !important;
+    box-sizing: border-box !important;
+}
+
+.indicator-item.level-2-item,
+.indicator-item.level-3-item,
+.indicator-item.level-4-item {
+    margin-top: 2px;
+}
+
+.level-2 > .indicator-item,
+.level-3 > .indicator-item,
+.level-4 > .indicator-item {
+    margin-bottom: 1px;
+}
+
+.level-2.horizontal {
+    display: block;
+    padding-left: 0;
+}
+
+.level-2.horizontal .indicator-item.level-2-item {
+    margin-top: 5px;
+}
+
+.level-3.horizontal {
+    display: block;
+    padding-left: 0;
+}
+
+.level-3.horizontal .indicator-item.level-3-item {
+    margin-top: 5px;
+}
+
+h6.font-weight-bold {
+    font-weight: bold !important;
+    font-size: 1.25rem !important;
+}
+
+h6.font-weight-bold, th {
+    font-size: 1rem !important;
+    font-weight: 600 !important;
+}
+
+.indicator-item.level-1-item {
+    margin-bottom: 10px;
+}
+
+.feed-axis-accuracy-table-container {
+    margin-bottom: 0.5rem;
+    width: 100%;
+}

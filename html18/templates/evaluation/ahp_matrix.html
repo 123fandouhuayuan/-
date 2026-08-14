@@ -1,0 +1,373 @@
+{% extends 'base.html' %}
+
+{% block title %}专家打分系统 - 层次分析法(AHP)判断矩阵构建{% endblock %}
+
+{% block page_title %}专家打分系统 - 层次分析法(AHP)判断矩阵构建{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- CSRF令牌 -->
+    <input type="hidden" name="csrfmiddlewaretoken" value="{% csrf_token %}">
+    <!-- 当前路径导航 -->
+    <div class="mb-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">当前路径</h5>
+                <p class="card-text" id="current-path">精度 &gt; 几何精度 &gt; 进给轴精度</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 打分指南 -->
+    <div class="mb-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">打分指南</h5>
+                <p class="card-text">
+                    1:同等重要 | 3:稍微重要 | 5:明显重要 | 7:强烈重要 | 9:极端重要 | 2,4,6,8:中间值
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 快速导入Excel -->
+    <div class="mb-4">
+        <div class="card border-primary">
+            <div class="card-body">
+                <h5 class="card-title text-primary">
+                    <i class="fas fa-file-excel"></i> 快速导入Excel数据
+                </h5>
+                <p class="card-text text-muted small">
+                    支持上传Excel文件（.xlsx, .xls）自动填充指标打分表
+                </p>
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <div class="input-group">
+                            <input type="file" class="form-control" id="excel-file" accept=".xlsx,.xls">
+                            <label class="input-group-text bg-light">
+                                <i class="fas fa-upload"></i> 选择文件
+                            </label>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <button class="btn btn-primary w-100" id="upload-excel-btn">
+                            <i class="fas fa-cloud-upload-alt"></i> 上传并填充
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 指标重要程度打分表 -->
+    <div class="mb-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">指标重要程度打分表 <small class="text-muted">(例：指标A对于指标B稍微重要，则对比项"指标A对指标B"打3分)</small></h5>
+                
+                <!-- 表面粗糙度和加工工序能力输入 -->
+                <div class="row mb-3">
+                    <div class="col-md-6 mb-3">
+                        <div class="input-group">
+                            <span class="input-group-text">表面粗糙度</span>
+                            <input type="number" class="form-control" id="surface-roughness" placeholder="输入表面粗糙度值" step="0.01" min="0" value="1" readonly>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="input-group">
+                            <span class="input-group-text">加工工序能力</span>
+                            <input type="number" class="form-control" id="process-capability" placeholder="输入加工工序能力值" step="0.01" min="0" value="1" readonly>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="matrix-container">
+                    <table class="table table-bordered table-sm">
+                        <thead>
+                            <tr>
+                                <th>对比项</th>
+                                <th>打分</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>直线度对平行度</td>
+                                <td>
+                                    <div class="input-group input-group-sm">
+                                        <input type="text" class="form-control form-control-sm matrix-input" value="1" placeholder="输入1-9或1/2-1/9">
+                                        <button class="btn btn-outline-secondary dropdown-toggle matrix-dropdown-btn" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                            <i class="fas fa-chevron-down" style="font-size: 0.75rem;"></i>
+                                        </button>
+                                        <ul class="dropdown-menu matrix-dropdown-menu">
+                                            <li><a class="dropdown-item" href="#" data-value="1/9">1/9</a></li>
+                                            <li><a class="dropdown-item" href="#" data-value="1/8">1/8</a></li>
+                                            <li><a class="dropdown-item" href="#" data-value="1/7">1/7</a></li>
+                                            <li><a class="dropdown-item" href="#" data-value="1/6">1/6</a></li>
+                                            <li><a class="dropdown-item" href="#" data-value="1/5">1/5</a></li>
+                                            <li><a class="dropdown-item" href="#" data-value="1/4">1/4</a></li>
+                                            <li><a class="dropdown-item" href="#" data-value="1/3">1/3</a></li>
+                                            <li><a class="dropdown-item" href="#" data-value="1/2">1/2</a></li>
+                                            <li><a class="dropdown-item" href="#" data-value="1">1</a></li>
+                                            <li><a class="dropdown-item" href="#" data-value="2">2</a></li>
+                                            <li><a class="dropdown-item" href="#" data-value="3">3</a></li>
+                                            <li><a class="dropdown-item" href="#" data-value="4">4</a></li>
+                                            <li><a class="dropdown-item" href="#" data-value="5">5</a></li>
+                                            <li><a class="dropdown-item" href="#" data-value="6">6</a></li>
+                                            <li><a class="dropdown-item" href="#" data-value="7">7</a></li>
+                                            <li><a class="dropdown-item" href="#" data-value="8">8</a></li>
+                                            <li><a class="dropdown-item" href="#" data-value="9">9</a></li>
+                                        </ul>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>直线度对垂直度</td>
+                                <td>
+                                    <div class="input-group input-group-sm">
+                                        <input type="text" class="form-control form-control-sm matrix-input" value="1" placeholder="输入1-9或1/2-1/9">
+                                        <button class="btn btn-outline-secondary dropdown-toggle matrix-dropdown-btn" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                            <i class="fas fa-chevron-down" style="font-size: 0.75rem;"></i>
+                                        </button>
+                                        <ul class="dropdown-menu matrix-dropdown-menu">
+                                            <li><a class="dropdown-item" href="#" data-value="1/9">1/9</a></li>
+                                            <li><a class="dropdown-item" href="#" data-value="1/8">1/8</a></li>
+                                            <li><a class="dropdown-item" href="#" data-value="1/7">1/7</a></li>
+                                            <li><a class="dropdown-item" href="#" data-value="1/6">1/6</a></li>
+                                            <li><a class="dropdown-item" href="#" data-value="1/5">1/5</a></li>
+                                            <li><a class="dropdown-item" href="#" data-value="1/4">1/4</a></li>
+                                            <li><a class="dropdown-item" href="#" data-value="1/3">1/3</a></li>
+                                            <li><a class="dropdown-item" href="#" data-value="1/2">1/2</a></li>
+                                            <li><a class="dropdown-item" href="#" data-value="1">1</a></li>
+                                            <li><a class="dropdown-item" href="#" data-value="2">2</a></li>
+                                            <li><a class="dropdown-item" href="#" data-value="3">3</a></li>
+                                            <li><a class="dropdown-item" href="#" data-value="4">4</a></li>
+                                            <li><a class="dropdown-item" href="#" data-value="5">5</a></li>
+                                            <li><a class="dropdown-item" href="#" data-value="6">6</a></li>
+                                            <li><a class="dropdown-item" href="#" data-value="7">7</a></li>
+                                            <li><a class="dropdown-item" href="#" data-value="8">8</a></li>
+                                            <li><a class="dropdown-item" href="#" data-value="9">9</a></li>
+                                        </ul>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>直线度对角度误差</td>
+                                <td>
+                                    <div class="input-group input-group-sm">
+                                        <input type="text" class="form-control form-control-sm matrix-input" value="1" placeholder="输入1-9或1/2-1/9">
+                                        <button class="btn btn-outline-secondary dropdown-toggle matrix-dropdown-btn" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                            <i class="fas fa-chevron-down" style="font-size: 0.75rem;"></i>
+                                        </button>
+                                        <ul class="dropdown-menu matrix-dropdown-menu">
+                                            <li><a class="dropdown-item" href="#" data-value="1/9">1/9</a></li>
+                                            <li><a class="dropdown-item" href="#" data-value="1/8">1/8</a></li>
+                                            <li><a class="dropdown-item" href="#" data-value="1/7">1/7</a></li>
+                                            <li><a class="dropdown-item" href="#" data-value="1/6">1/6</a></li>
+                                            <li><a class="dropdown-item" href="#" data-value="1/5">1/5</a></li>
+                                            <li><a class="dropdown-item" href="#" data-value="1/4">1/4</a></li>
+                                            <li><a class="dropdown-item" href="#" data-value="1/3">1/3</a></li>
+                                            <li><a class="dropdown-item" href="#" data-value="1/2">1/2</a></li>
+                                            <li><a class="dropdown-item" href="#" data-value="1">1</a></li>
+                                            <li><a class="dropdown-item" href="#" data-value="2">2</a></li>
+                                            <li><a class="dropdown-item" href="#" data-value="3">3</a></li>
+                                            <li><a class="dropdown-item" href="#" data-value="4">4</a></li>
+                                            <li><a class="dropdown-item" href="#" data-value="5">5</a></li>
+                                            <li><a class="dropdown-item" href="#" data-value="6">6</a></li>
+                                            <li><a class="dropdown-item" href="#" data-value="7">7</a></li>
+                                            <li><a class="dropdown-item" href="#" data-value="8">8</a></li>
+                                            <li><a class="dropdown-item" href="#" data-value="9">9</a></li>
+                                        </ul>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>平行度对垂直度</td>
+                                <td>
+                                    <div class="input-group input-group-sm">
+                                        <input type="text" class="form-control form-control-sm matrix-input" value="1" placeholder="输入1-9或1/2-1/9">
+                                        <button class="btn btn-outline-secondary dropdown-toggle matrix-dropdown-btn" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                            <i class="fas fa-chevron-down" style="font-size: 0.75rem;"></i>
+                                        </button>
+                                        <ul class="dropdown-menu matrix-dropdown-menu">
+                                            <li><a class="dropdown-item" href="#" data-value="1/9">1/9</a></li>
+                                            <li><a class="dropdown-item" href="#" data-value="1/8">1/8</a></li>
+                                            <li><a class="dropdown-item" href="#" data-value="1/7">1/7</a></li>
+                                            <li><a class="dropdown-item" href="#" data-value="1/6">1/6</a></li>
+                                            <li><a class="dropdown-item" href="#" data-value="1/5">1/5</a></li>
+                                            <li><a class="dropdown-item" href="#" data-value="1/4">1/4</a></li>
+                                            <li><a class="dropdown-item" href="#" data-value="1/3">1/3</a></li>
+                                            <li><a class="dropdown-item" href="#" data-value="1/2">1/2</a></li>
+                                            <li><a class="dropdown-item" href="#" data-value="1">1</a></li>
+                                            <li><a class="dropdown-item" href="#" data-value="2">2</a></li>
+                                            <li><a class="dropdown-item" href="#" data-value="3">3</a></li>
+                                            <li><a class="dropdown-item" href="#" data-value="4">4</a></li>
+                                            <li><a class="dropdown-item" href="#" data-value="5">5</a></li>
+                                            <li><a class="dropdown-item" href="#" data-value="6">6</a></li>
+                                            <li><a class="dropdown-item" href="#" data-value="7">7</a></li>
+                                            <li><a class="dropdown-item" href="#" data-value="8">8</a></li>
+                                            <li><a class="dropdown-item" href="#" data-value="9">9</a></li>
+                                        </ul>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>平行度对角度误差</td>
+                                <td>
+                                    <div class="input-group input-group-sm">
+                                        <input type="text" class="form-control form-control-sm matrix-input" value="1" placeholder="输入1-9或1/2-1/9">
+                                        <button class="btn btn-outline-secondary dropdown-toggle matrix-dropdown-btn" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                            <i class="fas fa-chevron-down" style="font-size: 0.75rem;"></i>
+                                        </button>
+                                        <ul class="dropdown-menu matrix-dropdown-menu">
+                                            <li><a class="dropdown-item" href="#" data-value="1/9">1/9</a></li>
+                                            <li><a class="dropdown-item" href="#" data-value="1/8">1/8</a></li>
+                                            <li><a class="dropdown-item" href="#" data-value="1/7">1/7</a></li>
+                                            <li><a class="dropdown-item" href="#" data-value="1/6">1/6</a></li>
+                                            <li><a class="dropdown-item" href="#" data-value="1/5">1/5</a></li>
+                                            <li><a class="dropdown-item" href="#" data-value="1/4">1/4</a></li>
+                                            <li><a class="dropdown-item" href="#" data-value="1/3">1/3</a></li>
+                                            <li><a class="dropdown-item" href="#" data-value="1/2">1/2</a></li>
+                                            <li><a class="dropdown-item" href="#" data-value="1">1</a></li>
+                                            <li><a class="dropdown-item" href="#" data-value="2">2</a></li>
+                                            <li><a class="dropdown-item" href="#" data-value="3">3</a></li>
+                                            <li><a class="dropdown-item" href="#" data-value="4">4</a></li>
+                                            <li><a class="dropdown-item" href="#" data-value="5">5</a></li>
+                                            <li><a class="dropdown-item" href="#" data-value="6">6</a></li>
+                                            <li><a class="dropdown-item" href="#" data-value="7">7</a></li>
+                                            <li><a class="dropdown-item" href="#" data-value="8">8</a></li>
+                                            <li><a class="dropdown-item" href="#" data-value="9">9</a></li>
+                                        </ul>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>垂直度对角度误差</td>
+                                <td>
+                                    <div class="input-group input-group-sm">
+                                        <input type="text" class="form-control form-control-sm matrix-input" value="1" placeholder="输入1-9或1/2-1/9">
+                                        <button class="btn btn-outline-secondary dropdown-toggle matrix-dropdown-btn" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                            <i class="fas fa-chevron-down" style="font-size: 0.75rem;"></i>
+                                        </button>
+                                        <ul class="dropdown-menu matrix-dropdown-menu">
+                                            <li><a class="dropdown-item" href="#" data-value="1/9">1/9</a></li>
+                                            <li><a class="dropdown-item" href="#" data-value="1/8">1/8</a></li>
+                                            <li><a class="dropdown-item" href="#" data-value="1/7">1/7</a></li>
+                                            <li><a class="dropdown-item" href="#" data-value="1/6">1/6</a></li>
+                                            <li><a class="dropdown-item" href="#" data-value="1/5">1/5</a></li>
+                                            <li><a class="dropdown-item" href="#" data-value="1/4">1/4</a></li>
+                                            <li><a class="dropdown-item" href="#" data-value="1/3">1/3</a></li>
+                                            <li><a class="dropdown-item" href="#" data-value="1/2">1/2</a></li>
+                                            <li><a class="dropdown-item" href="#" data-value="1">1</a></li>
+                                            <li><a class="dropdown-item" href="#" data-value="2">2</a></li>
+                                            <li><a class="dropdown-item" href="#" data-value="3">3</a></li>
+                                            <li><a class="dropdown-item" href="#" data-value="4">4</a></li>
+                                            <li><a class="dropdown-item" href="#" data-value="5">5</a></li>
+                                            <li><a class="dropdown-item" href="#" data-value="6">6</a></li>
+                                            <li><a class="dropdown-item" href="#" data-value="7">7</a></li>
+                                            <li><a class="dropdown-item" href="#" data-value="8">8</a></li>
+                                            <li><a class="dropdown-item" href="#" data-value="9">9</a></li>
+                                        </ul>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 指标对比矩阵 -->
+    <div class="mb-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">指标对比矩阵（只读）</h5>
+                <div class="matrix-container">
+                    <table class="table table-bordered table-sm matrix-table">
+                        <thead>
+                            <tr>
+                                <th>指标名称</th>
+                                <th>直线度</th>
+                                <th>平行度</th>
+                                <th>垂直度</th>
+                                <th>角度误差</th>
+                                <th>说明</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>直线度</td>
+                                <td>1（固定）</td>
+                                <td id="cell-0-1">1</td>
+                                <td id="cell-0-2">1</td>
+                                <td id="cell-0-3">1</td>
+                                <td>参考标准：GB/T ...</td>
+                            </tr>
+                            <tr>
+                                <td>平行度</td>
+                                <td id="cell-1-0">1</td>
+                                <td>1（固定）</td>
+                                <td id="cell-1-2">1</td>
+                                <td id="cell-1-3">1</td>
+                                <td>参考标准：GB/T ...</td>
+                            </tr>
+                            <tr>
+                                <td>垂直度</td>
+                                <td id="cell-2-0">1</td>
+                                <td id="cell-2-1">1</td>
+                                <td>1（固定）</td>
+                                <td id="cell-2-3">1</td>
+                                <td>参考标准：GB/T ...</td>
+                            </tr>
+                            <tr>
+                                <td>角度误差</td>
+                                <td id="cell-3-0">1</td>
+                                <td id="cell-3-1">1</td>
+                                <td id="cell-3-2">1</td>
+                                <td>1（固定）</td>
+                                <td>参考标准：GB/T ...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 矩阵一致性检验结果 -->
+    <div class="mb-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">矩阵一致性检验结果：</h5>
+                <div id="consistency-result">
+                    <p class="card-text">
+                        λmax = [计算中...] | CI = [计算中...] | RI = [计算中...] | CR = [计算中...]
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 辅助决策工具 -->
+    <div class="mb-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">操作按钮：</h5>
+                <div class="d-flex flex-wrap gap-3">
+                    <button class="btn btn-sm btn-primary" id="save-matrix-btn">计算</button>
+                    <button class="btn btn-sm btn-secondary" id="clear-matrix-btn">清除重填</button>
+                    <button class="btn btn-sm btn-success" id="submit-matrix-btn">提交打分</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/evaluation/ahp_matrix.js' %}"></script>
+{% endblock %}
